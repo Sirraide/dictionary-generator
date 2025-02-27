@@ -1,0 +1,12 @@
+## IDE and editor files.
+.idea/
+.vscode/
+.cache/
+
+## Build files.
+/out/
+/dictionary-generator
+/dictionary-generator.exe
+
+## Valgrind.
+callgrind.out.*
