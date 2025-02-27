@@ -1,5 +1,5 @@
 #include <base/Text.hh>
-#include <frontend.hh>
+#include <dictgen/frontend.hh>
 
 using namespace dict;
 

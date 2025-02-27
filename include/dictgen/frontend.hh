@@ -1,9 +1,8 @@
 #ifndef PARSER_HH
 #define PARSER_HH
 
-#include "base/Base.hh"
-
-#include <backends.hh>
+#include <base/Base.hh>
+#include <dictgen/backends.hh>
 #include <unicode/translit.h>
 
 namespace dict {
@@ -43,6 +42,6 @@ private:
     void create_full_entry(std::u32string word, std::vector<std::u32string> parts);
     auto normalise_for_sorting(std::u32string_view word) const -> icu::UnicodeString;
 };
-}
+} // namespace dict
 
-#endif //PARSER_HH
+#endif // PARSER_HH

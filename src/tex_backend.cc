@@ -1,4 +1,4 @@
-#include <backends.hh>
+#include <dictgen/backends.hh>
 #include <print>
 
 using namespace dict;
