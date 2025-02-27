@@ -31,11 +31,11 @@ endif()
 ## ============================================================================
 ##  Compiler options.
 ## ============================================================================
-add_library(options INTERFACE)
+add_library(_dictionary_generator_options INTERFACE)
 
 ## Flags for Clang and GCC.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(options INTERFACE
+    target_compile_options(_dictionary_generator_options INTERFACE
         ## Warnings.
         -Wall -Wextra     # Enable ‘all’ warnings.
         -Wundef           # Invalid #undef or undefined macro in #if.
@@ -77,7 +77,7 @@ endif()
 
 ## Additional flags for GCC.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(options INTERFACE
+    target_compile_options(_dictionary_generator_options INTERFACE
         -Wlogical-op      # Duplicate or unintended logical operators.
         -Werror=invalid-memory-model # For atomics.
         -Werror=maybe-uninitialized
@@ -88,7 +88,7 @@ endif()
 
 ## Additional flags for Clang.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(options INTERFACE
+    target_compile_options(_dictionary_generator_options INTERFACE
         -Werror=dangling
         -Werror=return-stack-address
     )
@@ -96,7 +96,7 @@ endif()
 
 ## Flags for MSVC.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(options INTERFACE
+    target_compile_options(_dictionary_generator_options INTERFACE
         /W4 # Enable ‘all’ warnings.
 
         # Allow unnamed structs/unions.
@@ -109,7 +109,7 @@ endif()
 
 ## On Windows, don’t suggest the _s nonsense functions.
 if (WIN32)
-    target_compile_definitions(options INTERFACE
+    target_compile_definitions(_dictionary_generator_options INTERFACE
         _CRT_SECURE_NO_WARNINGS
         _CRT_SECURE_NO_WARNINGS_GLOBALS
         _CRT_NONSTDC_NO_WARNINGS
@@ -118,22 +118,22 @@ endif()
 
 ## Address Sanitiser.
 if (ENABLE_ASAN)
-    target_compile_options(options INTERFACE -fsanitize=address)
-    target_link_options(options INTERFACE -fsanitize=address)
+    target_compile_options(_dictionary_generator_options INTERFACE -fsanitize=address)
+    target_link_options(_dictionary_generator_options INTERFACE -fsanitize=address)
 endif()
 
 ## Debug/Release flags.
 if (NOT MSVC)
-    target_compile_options(options INTERFACE
+    target_compile_options(_dictionary_generator_options INTERFACE
         $<$<CONFIG:DEBUG>:-O0 -g3 -ggdb3 -D_GLIBCXX_ASSERTIONS>
         $<$<CONFIG:RELEASE>:-O3 -march=native>
     )
-    target_link_options(options INTERFACE
+    target_link_options(_dictionary_generator_options INTERFACE
         $<$<CONFIG:DEBUG>:-O0 -g3 -ggdb3 -rdynamic>
         $<$<CONFIG:RELEASE>:-O3 -march=native>
     )
 else()
-    target_compile_options(options INTERFACE
+    target_compile_options(_dictionary_generator_options INTERFACE
         $<$<CONFIG:DEBUG>:/Od>
         $<$<CONFIG:RELEASE>:/O2>
     )
@@ -143,7 +143,7 @@ endif()
 ##  Dependencies and include dirs.
 ## ============================================================================
 # ‘src’ should be an include directory.
-target_include_directories(options INTERFACE include)
+target_include_directories(_dictionary_generator_options INTERFACE include)
 
 ## Add libbase.
 include(FetchContent)
@@ -171,5 +171,5 @@ target_sources(dictionary-generator PUBLIC FILE_SET HEADERS FILES ${headers})
 ## Apply our options.
 target_link_libraries(dictionary-generator
     PUBLIC libbase
-    PRIVATE options nlohmann_json::nlohmann_json
+    PRIVATE _dictionary_generator_options nlohmann_json::nlohmann_json
 )
