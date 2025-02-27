@@ -143,7 +143,6 @@ endif()
 ##  Dependencies and include dirs.
 ## ============================================================================
 # ‘src’ should be an include directory.
-target_include_directories(_dictionary_generator_options INTERFACE include)
 
 ## Add libbase.
 include(FetchContent)
@@ -167,6 +166,7 @@ file(GLOB_RECURSE headers include/*.hh src/*.hh)
 ## Add the executable.
 add_library(dictionary-generator STATIC ${sources})
 target_sources(dictionary-generator PUBLIC FILE_SET HEADERS FILES ${headers})
+target_include_directories(dictionary-generator PUBLIC include)
 
 ## Apply our options.
 target_link_libraries(dictionary-generator
