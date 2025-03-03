@@ -93,15 +93,15 @@ TEST_CASE("Unknown macros are passed to the lang ops") {
 }
 
 TEST_CASE("Single-argument macros") {
-    CHECK(Convert("\\s{a}{b}") == "<uf-s>a</uf-s>b");
-    CHECK(Convert("\\s{a{c}}{b}") == "<uf-s>ac</uf-s>b");
-    CHECK(Convert("\\s{a{\\s{c}}}{b}") == "<uf-s>a<uf-s>c</uf-s></uf-s>b");
+    CHECK(Convert("\\s{a}{b}") == "<f-s>a</f-s>b");
+    CHECK(Convert("\\s{a{c}}{b}") == "<f-s>ac</f-s>b");
+    CHECK(Convert("\\s{a{\\s{c}}}{b}") == "<f-s>a<f-s>c</f-s></f-s>b");
 }
 
 TEST_CASE("Builtin macros") {
     CHECK(Convert("\\par") == "</p><p>");
     CHECK(Convert("\\ldots") == "&hellip;");
-    CHECK(Convert("\\this") == "<uf-w>the-current-word</uf-w>");
+    CHECK(Convert("\\this") == "<f-w>the-current-word</f-w>");
     CHECK(Convert("\\Sup{foo}bar") == "<sup>foo</sup>bar");
     CHECK(Convert("\\Sub{foo}bar") == "<sub>foo</sub>bar");
 }

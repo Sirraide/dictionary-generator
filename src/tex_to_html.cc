@@ -122,21 +122,18 @@ auto TeXToHtmlConverter::ParseMacro() -> Result<> {
     auto macro = input.take_while_any("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@");
     if (macro.empty()) return Error("Invalid macro escape sequence");
     input.trim_front();
-    if (macro == "pf") Try(single_argument_macro_to_tag("uf-pf"));
-    else if (macro == "s") Try(single_argument_macro_to_tag("uf-s"));
-    else if (macro == "w") Try(single_argument_macro_to_tag("uf-w"));
+    if (macro == "s") Try(single_argument_macro_to_tag("f-s"));
+    else if (macro == "w") Try(single_argument_macro_to_tag("f-w"));
     else if (macro == "textit") Try(single_argument_macro_to_tag("em"));
     else if (macro == "textbf") Try(single_argument_macro_to_tag("strong"));
-    else if (macro == "textnf") Try(single_argument_macro_to_tag("uf-nf"));
-    else if (macro == "senseref") Try(single_argument_macro_to_tag("uf-sense"));
+    else if (macro == "textnf") Try(single_argument_macro_to_tag("f-nf"));
+    else if (macro == "senseref") Try(single_argument_macro_to_tag("f-sense"));
     else if (macro == "Sup") Try(single_argument_macro_to_tag("sup"));
     else if (macro == "Sub") Try(single_argument_macro_to_tag("sub"));
     else if (macro == "par") append_raw("</p><p>");
-    else if (macro == "L") drop_empty_and_append_raw("<uf-mut><sup>L</sup></uf-mut>");
-    else if (macro == "N") drop_empty_and_append_raw("<uf-mut><sup>N</sup></uf-mut>");
     else if (macro == "ref" or macro == "label") Try(drop_arg());
     else if (macro == "ldots") drop_empty_and_append_raw("&hellip;");
-    else if (macro == "this") drop_empty_and_append_raw(std::format("<uf-w>{}</uf-w>", current_word)); // This has already been escaped; don’t escape it again.
+    else if (macro == "this") drop_empty_and_append_raw(std::format("<f-w>{}</f-w>", current_word)); // This has already been escaped; don’t escape it again.
     else if (macro == "ex" or macro == "comment") {} // Already handled when we split senses and examples.
     else Try(HandleUnknownMacro(macro));
     return {};
