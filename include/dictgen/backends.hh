@@ -88,30 +88,34 @@ class TeXToHtmlConverter {
     friend JsonBackend;
 
 public:
-    JsonBackend& backend;
+    LanguageOps& ops;
+    std::string_view current_word;
     stream input;
     bool plain_text_output;
     bool suppress_output = false;
     std::string out = "";
 
     /// Append HTML-escaped text.
-    void Append(std::string_view s);
+    void append(std::string_view s);
 
     /// Append text without HTML-escaping.
-    void AppendRaw(std::string_view s);
+    void append_raw(std::string_view s);
 
     /// Drop the next argument if present. Nested macros are not expanded.
-    auto DropArg() -> Result<>;
+    auto drop_arg() -> Result<>;
 
     /// Drop an empty argument if present and append a raw string.
-    void DropEmptyAndAppendRaw(std::string_view s);
+    void drop_empty_and_append_raw(std::string_view s);
 
     /// Get the next argument, if there is one. This expands nested macros and drops braces.
-    auto GetArg() -> Result<std::string>;
+    auto get_arg() -> Result<std::string>;
 
     /// Parse a macro and expand its contents and insert the resulting string
     /// into the output, wrapped in a tag with the given name.
-    auto SingleArgumentMacroToTag(std::string_view tag_name) -> Result<>;
+    auto single_argument_macro_to_tag(std::string_view tag_name) -> Result<>;
+
+    /// Run the converter.
+    auto run() -> Result<std::string>;
 
 private:
     auto HandleUnknownMacro(std::string_view macro) -> Result<>;
@@ -119,7 +123,6 @@ private:
     auto ParseGroup() -> Result<>;
     auto ParseMacro() -> Result<>;
     auto ParseMaths() -> Result<>;
-    auto Run() -> Result<std::string>;
 };
 
 class Backend {

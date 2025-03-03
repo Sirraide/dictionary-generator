@@ -173,3 +173,35 @@ target_link_libraries(dictionary-generator
     PUBLIC libbase
     PRIVATE _dictionary_generator_options nlohmann_json::nlohmann_json
 )
+
+
+## ============================================================================
+##  Testing
+## ============================================================================
+if (DEFINED BUILD_DICT_GEN_TESTS)
+    FetchContent_Declare(
+      Catch2
+      GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+      GIT_TAG        v3.6.0
+    )
+    FetchContent_MakeAvailable(Catch2)
+
+    list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+    include(CTest)
+    include(Catch)
+
+    file(GLOB_RECURSE test_sources test/*.cc)
+    add_executable(tests ${test_sources})
+    target_link_libraries(tests PRIVATE dictionary-generator Catch2::Catch2WithMain)
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(tests PRIVATE -fms-extensions -fdeclspec)
+    endif()
+
+    target_compile_definitions(tests PRIVATE
+        "LIBBASE_TESTING_BINARY_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\""
+        "LIBBASE_IS_BUILDING_TESTS"
+    )
+
+    catch_discover_tests(tests)
+endif()
