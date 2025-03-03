@@ -25,6 +25,22 @@ struct FullEntry {
         std::vector<Example> examples;
     };
 
+    // Entry parts.
+    //
+    // Note that the headword has already been removed from this, so the ‘first
+    // part’ here is the part of speech (which is the second field in the raw
+    // file) etc.
+    enum struct Part {
+        POSPart,
+        EtymPart,
+        DefPart,
+        FormsPart,
+        IPAPart,
+
+        MaxParts,
+        MinParts = DefPart + 1,
+    };
+
     /// Part of speech.
     std::string pos;
 
@@ -112,8 +128,8 @@ public:
 
     i64 line = 0;
 
-    template <std::derived_from<Backend> BackendType, typename ...Args>
-    static auto New(Args&& ...args) -> std::unique_ptr<Backend> {
+    template <std::derived_from<Backend> BackendType, typename... Args>
+    static auto New(Args&&... args) -> std::unique_ptr<Backend> {
         return std::unique_ptr<Backend>{new BackendType(std::forward<Args>(args)...)};
     }
 
@@ -169,6 +185,6 @@ public:
     // This backend prints immediately during generation.
     void print() override {} // No-op.
 };
-}
+} // namespace dict
 
-#endif //BACKENDS_HH
+#endif // BACKENDS_HH

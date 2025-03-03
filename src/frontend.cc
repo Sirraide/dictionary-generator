@@ -42,22 +42,8 @@ void Entry::emit(Backend& backend) const { // clang-format off
 } // clang-format on
 
 void Generator::create_full_entry(std::u32string word, std::vector<std::u32string> parts) {
+    using enum FullEntry::Part;
     FullEntry entry;
-
-    // Entry parts.
-    //
-    // Note that the headword has already been removed from this, so the ‘first
-    // part’ here is the part of speech (which is the second field in the raw file) etc.
-    enum : usz {
-        POSPart,
-        EtymPart,
-        DefPart,
-        FormsPart,
-        IPAPart,
-
-        MaxParts,
-        MinParts = DefPart + 1,
-    };
 
     // Preprocessing.
     if (auto res = ops().preprocess_full_entry(parts); not res) {
@@ -66,13 +52,13 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     }
 
     // Make sure we have enough parts.
-    if (parts.size() < MinParts) {
+    if (parts.size() < +MinParts) {
         backend.error("An entry must have at least 4 parts: word, part of speech, etymology, definition");
         return;
     }
 
     // Make sure we don’t have too many parts.
-    if (parts.size() > MaxParts) {
+    if (parts.size() > +MaxParts) {
         backend.error("An entry must have at most 6 parts: word, part of speech, etymology, definition, forms, IPA");
         return;
     }
@@ -81,10 +67,10 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     // full stops between senses, only if there isn’t already a full stop there. Of course,
     // this means we need to convert that to HTML for the JSON output, but we need to do
     // that anyway since the input is already LaTeX.
-    static_assert(MaxParts == 5, "Handle all parts below");
+    static_assert(+MaxParts == 5, "Handle all parts below");
 
     // Part of speech.
-    entry.pos = text::ToUTF8(parts[POSPart]);
+    entry.pos = text::ToUTF8(parts[+POSPart]);
 
     // Etymology.
     //
@@ -92,7 +78,7 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     // wrap it with '\pf{}'. That takes care of this field for most words
     // (conversely, more complex etymologies often don’t start w/ a PF word).
     // Etymology is empty; don’t do anything here.
-    if (auto& part = parts[EtymPart]; not part.empty()) {
+    if (auto& part = parts[+EtymPart]; not part.empty()) {
         // If the etymology contains no spaces or macros, it is likely just
         // a single French word, so insert \pf.
         if (not part.contains(U' ') and not part.contains(U'\\'))
@@ -148,7 +134,7 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     // and doesn’t count as a sense because it is either the only one or, if there
     // are multiple senses, it denotes a more overarching definition that applies
     // to all or most senses.
-    u32stream s{parts[DefPart]};
+    u32stream s{parts[+DefPart]};
     entry.primary_definition = SplitSense(s.take_until_and_drop(SenseMacroU32));
     for (auto sense : s.split(SenseMacroU32))
         entry.senses.push_back(SplitSense(sense));
@@ -156,10 +142,10 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     // Forms.
     //
     // FIXME: The dot should be added here instead of by LaTeX.
-    if (parts.size() > FormsPart) entry.forms = text::ToUTF8(parts[FormsPart]);
+    if (parts.size() > +FormsPart) entry.forms = text::ToUTF8(parts[+FormsPart]);
 
     // IPA.
-    if (parts.size() > IPAPart) entry.ipa = text::ToUTF8(parts[IPAPart]);
+    if (parts.size() > +IPAPart) entry.ipa = text::ToUTF8(parts[+IPAPart]);
 
     // Create a canonicalised form of this entry for sorting.
     auto nfkd = normalise_for_sorting(word);
