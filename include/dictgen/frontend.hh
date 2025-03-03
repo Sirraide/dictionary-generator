@@ -40,7 +40,8 @@ public:
 
 private:
     void create_full_entry(std::u32string word, std::vector<std::u32string> parts);
-    auto normalise_for_sorting(std::u32string_view word) const -> icu::UnicodeString;
+    [[nodiscard]] auto normalise_for_sorting(std::u32string_view word) const -> icu::UnicodeString;
+    [[nodiscard]] auto ops() -> LanguageOps& { return backend.ops; }
 };
 } // namespace dict
 

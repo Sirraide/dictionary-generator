@@ -3,21 +3,7 @@
 
 using namespace dict;
 
-struct JsonBackend::TeXToHtmlConverter {
-    JsonBackend& backend;
-    stream input;
-    bool plain_text_output;
-    bool suppress_output = false;
-    std::string out = "";
-
-    void Append(std::string_view s);
-    void AppendRaw(std::string_view s);
-    void ProcessMacro();
-    auto Run() -> std::string;
-    void SingleArgumentMacroToTag(std::string_view tag_name);
-};
-
-void JsonBackend::TeXToHtmlConverter::Append(std::string_view s) {
+void TeXToHtmlConverter::Append(std::string_view s) {
     // We need to escape certain chars for HTML. Do this first
     // since we’ll be inserting HTML tags later.
     if (not plain_text_output and stream{s}.contains_any("<>§~")) {
@@ -32,11 +18,30 @@ void JsonBackend::TeXToHtmlConverter::Append(std::string_view s) {
     }
 }
 
-void JsonBackend::TeXToHtmlConverter::AppendRaw(std::string_view s) {
+void TeXToHtmlConverter::AppendRaw(std::string_view s) {
     if (not suppress_output) out += s;
 }
 
-void JsonBackend::TeXToHtmlConverter::ProcessMacro() {
+void TeXToHtmlConverter::DropArg() {
+    (void) GetArg();
+}
+
+void TeXToHtmlConverter::DropArgAndAppendRaw(std::string_view s) {
+    DropArg();
+    if (not plain_text_output) AppendRaw(s);
+}
+
+auto TeXToHtmlConverter::GetArg() -> Result<std::string_view> {
+    if (input.trim_front().starts_with('{')) return input.take_until_and_drop('}');
+    return Error("Missing arg for macro");
+}
+
+void TeXToHtmlConverter::HandleUnknownMacro(std::string_view macro) {
+    if (auto res = backend.ops.handle_unknown_macro(*this, macro); not res)
+        backend.error("{}", res.error());
+}
+
+void TeXToHtmlConverter::ProcessMacro() {
     tempset suppress_output = plain_text_output;
 
     // Found a macro; first, handle single-character macros.
@@ -57,19 +62,9 @@ void JsonBackend::TeXToHtmlConverter::ProcessMacro() {
             case '\\': backend.error("'\\\\' is not supported in this field"); return;
 
             // Unknown.
-            default: backend.error("Unsupported macro. Please add support for '\\{}' to the ULTRAFRENCHER", c); return;
+            default: return HandleUnknownMacro({&c, 1});
         }
     }
-
-    // Drop a brace-delimited argument after a macro.
-    auto DropArg = [&] {
-        if (input.trim_front().starts_with('{')) input.drop_until('}').drop();
-    };
-
-    auto DropArgAndAppendRaw = [&](std::string_view text) {
-        DropArg();
-        if (not plain_text_output) AppendRaw(text);
-    };
 
     // Handle regular macros. We use custom tags for some of these to
     // separate the formatting from data.
@@ -91,10 +86,10 @@ void JsonBackend::TeXToHtmlConverter::ProcessMacro() {
     else if (macro == "ldots") DropArgAndAppendRaw("&hellip;");
     else if (macro == "this") DropArgAndAppendRaw(std::format("<uf-w>{}</uf-w>", backend.current_word)); // This has already been escaped; don’t escape it again.
     else if (macro == "ex" or macro == "comment") {} // Already handled when we split senses and examples.
-    else backend.error("Unsupported macro '\\{}'. Please add support for it to the ULTRAFRENCHER", macro);
+    else return HandleUnknownMacro(macro);
 }
 
-auto JsonBackend::TeXToHtmlConverter::Run() -> std::string {
+auto TeXToHtmlConverter::Run() -> std::string {
     // Process macros.
     for (;;) {
         Append(input.take_until_any("\\$"));
@@ -118,7 +113,7 @@ auto JsonBackend::TeXToHtmlConverter::Run() -> std::string {
     return out;
 }
 
-void JsonBackend::TeXToHtmlConverter::SingleArgumentMacroToTag(std::string_view tag_name) {
+void TeXToHtmlConverter::SingleArgumentMacroToTag(std::string_view tag_name) {
     // Drop everything until the argument brace. We’re not a LaTeX tokeniser, so we don’t
     // support stuff like `\fract1 2`, as much as I like to write it.
     if (not stream{input.take_until('{')}.trim().empty())

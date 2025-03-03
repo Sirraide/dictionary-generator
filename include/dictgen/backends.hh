@@ -8,6 +8,10 @@ namespace dict {
 using namespace base;
 using nlohmann::json;
 
+class Backend;
+class JsonBackend;
+class TeXToHtmlConverter;
+
 using RefEntry = std::string;
 struct FullEntry {
     struct Example {
@@ -43,9 +47,19 @@ struct FullEntry {
     std::string forms;
 };
 
-// Language-specific operations.
+/// Language-specific operations.
 struct LanguageOps {
     virtual ~LanguageOps() = default;
+
+    /// Handle an unknown macro.
+    ///
+    /// \param macro The macro name, *without* the leading backslash.
+    virtual auto handle_unknown_macro(TeXToHtmlConverter&, std::string_view macro) -> Result<> {
+        return Error("Unsupported macro '{}'. Please add support for it to the dictionary generator.", macro);
+    }
+
+    /// Preprocess the fields before conversion is attempted.
+    virtual auto preprocess_full_entry(std::vector<std::u32string>&) -> Result<> { return {}; }
 
     /// Convert the language’s text to IPA.
     ///
@@ -54,13 +68,48 @@ struct LanguageOps {
     [[nodiscard]] virtual auto to_ipa(std::string_view) -> std::string = 0;
 };
 
+class TeXToHtmlConverter {
+    friend JsonBackend;
+
+public:
+    JsonBackend& backend;
+    stream input;
+    bool plain_text_output;
+    bool suppress_output = false;
+    std::string out = "";
+
+    /// Append HTML-escaped text.
+    void Append(std::string_view s);
+
+    /// Append text without HTML-escaping.
+    void AppendRaw(std::string_view s);
+
+    /// Drop the next argument if present. Nested macros are not expanded
+    void DropArg();
+
+    /// Drop the next argument if present and append a string instead. Nested macros are not expanded
+    void DropArgAndAppendRaw(std::string_view s);
+
+    /// Get the next argument, if there is one. Nested macros and braces are not supported.
+    auto GetArg() -> Result<std::string_view>;
+
+    /// Parse a macro and expand its contents and insert the resulting string
+    /// into the output, wrapped in a tag with the given name.
+    void SingleArgumentMacroToTag(std::string_view tag_name);
+
+private:
+    void HandleUnknownMacro(std::string_view macro);
+    void ProcessMacro();
+    auto Run() -> std::string;
+};
+
 class Backend {
 protected:
-    LanguageOps& ops;
-
     Backend(LanguageOps& ops) : ops{ops} {}
 
 public:
+    LanguageOps& ops;
+
     i64 line = 0;
 
     template <std::derived_from<Backend> BackendType, typename ...Args>
@@ -82,7 +131,7 @@ public:
 };
 
 class JsonBackend final : public Backend {
-    struct TeXToHtmlConverter;
+    friend TeXToHtmlConverter;
 
     json out;
     std::string errors;

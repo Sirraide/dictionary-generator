@@ -59,6 +59,12 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
         MinParts = DefPart + 1,
     };
 
+    // Preprocessing.
+    if (auto res = ops().preprocess_full_entry(parts); not res) {
+        backend.error("Preprocessing error: {}", res.error());
+        return;
+    }
+
     // Make sure we have enough parts.
     if (parts.size() < MinParts) {
         backend.error("An entry must have at least 4 parts: word, part of speech, etymology, definition");
