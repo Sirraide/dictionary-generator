@@ -118,6 +118,7 @@ private:
     auto ParseContent(i32 braces) -> Result<>;
     auto ParseGroup() -> Result<>;
     auto ParseMacro() -> Result<>;
+    auto ParseMaths() -> Result<>;
     auto Run() -> Result<std::string>;
 };
 

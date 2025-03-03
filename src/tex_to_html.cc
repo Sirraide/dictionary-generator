@@ -55,18 +55,16 @@ auto TeXToHtmlConverter::HandleUnknownMacro(std::string_view macro) -> Result<> 
 auto TeXToHtmlConverter::ParseContent(i32 braces) -> Result<> {
     while (not input.empty()) {
         Append(input.take_until_any("\\${}"));
-        if (input.consume('}')) {
-            braces--;
-            if (braces == 0) return {};
-            if (braces < 0) return Error("Too many '}}'s!");
-        }
-
-        else if (input.consume('{')) braces++;
-        else if (input.consume('\\')) Try(ParseMacro());
-        else if (input.consume('$')) { // TODO: Render maths.
-            AppendRaw("$");
-            Append(input.take_until('$'));
-            AppendRaw("$");
+        switch (input.front().value_or(0)) {
+            default: break;
+            case '\\': Try(ParseMacro()); break;
+            case '$': Try(ParseMaths()); break;
+            case '{': braces++; break;
+            case '}':
+                braces--;
+                if (braces == 0) return {};
+                if (braces < 0) return Error("Too many '}}'s!");
+                break;
         }
     }
 
@@ -82,8 +80,6 @@ auto TeXToHtmlConverter::ParseGroup() -> Result<> {
 
 auto TeXToHtmlConverter::ParseMacro() -> Result<> {
     tempset suppress_output = plain_text_output;
-
-    // Yeet '\'.
     Assert(input.consume('\\'), "Expected backslash");
     if (input.empty()) return Error("Invalid macro escape sequence");
 
@@ -98,6 +94,7 @@ auto TeXToHtmlConverter::ParseMacro() -> Result<> {
 
             // Escaped characters.
             case '&': AppendRaw("&amp;"); return {};
+            case '$': AppendRaw("$"); return {};
             case '%': AppendRaw("%"); return {};
             case '#': AppendRaw("#"); return {};
             case '{': AppendRaw("{"); return {};
@@ -134,6 +131,15 @@ auto TeXToHtmlConverter::ParseMacro() -> Result<> {
     else Try(HandleUnknownMacro(macro));
     return {};
 }
+
+auto TeXToHtmlConverter::ParseMaths() -> Result<> {
+    Assert(input.consume('$'), "Expected '$'");
+    AppendRaw("$");
+    Append(input.take_until_and_drop('$'));
+    AppendRaw("$");
+    return {};
+}
+
 
 auto TeXToHtmlConverter::Run() -> Result<std::string> {
     while (not input.empty()) Try(ParseContent(0));
