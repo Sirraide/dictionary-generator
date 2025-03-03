@@ -73,19 +73,7 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     entry.pos = text::ToUTF8(parts[+POSPart]);
 
     // Etymology.
-    //
-    // If this is a single word, and the field contains no backslashes,
-    // wrap it with '\pf{}'. That takes care of this field for most words
-    // (conversely, more complex etymologies often don’t start w/ a PF word).
-    // Etymology is empty; don’t do anything here.
-    if (auto& part = parts[+EtymPart]; not part.empty()) {
-        // If the etymology contains no spaces or macros, it is likely just
-        // a single French word, so insert \pf.
-        if (not part.contains(U' ') and not part.contains(U'\\'))
-            entry.etym = "\\pf{" + text::ToUTF8(part) + "}"; // No Utf32 std::format :(
-        else
-            entry.etym = text::ToUTF8(part);
-    }
+    entry.etym = text::ToUTF8(parts[+EtymPart]);
 
     // Definition and senses.
     //
