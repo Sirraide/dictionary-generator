@@ -15,6 +15,13 @@ auto TestOps::handle_unknown_macro(TeXToHtmlConverter& conv, std::string_view ma
         return {};
     }
 
+    if (macro == "definedintestops") {
+        conv.append("This is our test macro");
+        return {};
+    }
+
+    if (macro == "xyz") return conv.single_argument_macro_to_tag("foo");
+
     return LanguageOps::handle_unknown_macro(conv, macro);
 }
 
@@ -87,9 +94,15 @@ TEST_CASE("Double backslash is not a valid escape sequence") {
     CHECK_THROWS(Convert("{\\\\}"));
 }
 
-TEST_CASE("Unknown macros are passed to the lang ops") {
+TEST_CASE("Unknown single-character macros are passed to the lang ops") {
     CHECK(Convert("\\/") == "Found /!");
     CHECK_THROWS(Convert("\\@"));
+}
+
+TEST_CASE("Unknown macros are passed to the lang ops") {
+    CHECK(Convert("\\definedintestops") == "This is our test macro");
+    CHECK(Convert("\\xyz{bar}") == "<foo>bar</foo>");
+    CHECK_THROWS(Convert("\\definitelynotdefined"));
 }
 
 TEST_CASE("Single-argument macros") {
