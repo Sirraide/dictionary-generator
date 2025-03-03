@@ -100,23 +100,25 @@ public:
     /// Append text without HTML-escaping.
     void AppendRaw(std::string_view s);
 
-    /// Drop the next argument if present. Nested macros are not expanded
-    void DropArg();
+    /// Drop the next argument if present. Nested macros are not expanded.
+    auto DropArg() -> Result<>;
 
-    /// Drop the next argument if present and append a string instead. Nested macros are not expanded
-    void DropArgAndAppendRaw(std::string_view s);
+    /// Drop an empty argument if present and append a raw string.
+    void DropEmptyAndAppendRaw(std::string_view s);
 
-    /// Get the next argument, if there is one. Nested macros and braces are not supported.
-    auto GetArg() -> Result<std::string_view>;
+    /// Get the next argument, if there is one. This expands nested macros and drops braces.
+    auto GetArg() -> Result<std::string>;
 
     /// Parse a macro and expand its contents and insert the resulting string
     /// into the output, wrapped in a tag with the given name.
-    void SingleArgumentMacroToTag(std::string_view tag_name);
+    auto SingleArgumentMacroToTag(std::string_view tag_name) -> Result<>;
 
 private:
-    void HandleUnknownMacro(std::string_view macro);
-    void ProcessMacro();
-    auto Run() -> std::string;
+    auto HandleUnknownMacro(std::string_view macro) -> Result<>;
+    auto ParseContent(i32 braces) -> Result<>;
+    auto ParseGroup() -> Result<>;
+    auto ParseMacro() -> Result<>;
+    auto Run() -> Result<std::string>;
 };
 
 class Backend {

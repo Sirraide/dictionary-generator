@@ -6,7 +6,7 @@ using namespace dict;
 void TeXToHtmlConverter::Append(std::string_view s) {
     // We need to escape certain chars for HTML. Do this first
     // since we’ll be inserting HTML tags later.
-    if (not plain_text_output and stream{s}.contains_any("<>§~")) {
+    if (not plain_text_output and not suppress_output and stream{s}.contains_any("<>§~")) {
         auto copy = std::string{s};
         utils::ReplaceAll(copy, "<", "&lt;");
         utils::ReplaceAll(copy, ">", "&gt;");
@@ -22,44 +22,89 @@ void TeXToHtmlConverter::AppendRaw(std::string_view s) {
     if (not suppress_output) out += s;
 }
 
-void TeXToHtmlConverter::DropArg() {
-    (void) GetArg();
+auto TeXToHtmlConverter::DropArg() -> Result<> {
+    tempset suppress_output = true;
+    Try(ParseGroup());
+    return {};
 }
 
-void TeXToHtmlConverter::DropArgAndAppendRaw(std::string_view s) {
-    DropArg();
+void TeXToHtmlConverter::DropEmptyAndAppendRaw(std::string_view s) {
+    (void) input.consume("{}");
     if (not plain_text_output) AppendRaw(s);
 }
 
-auto TeXToHtmlConverter::GetArg() -> Result<std::string_view> {
-    if (input.trim_front().starts_with('{')) return input.take_until_and_drop('}');
-    return Error("Missing arg for macro");
+auto TeXToHtmlConverter::GetArg() -> Result<std::string> {
+    if (not input.trim_front().starts_with('{')) return Error("Missing arg for macro");
+
+    // Parse the argument; note that the existing code emits to 'out', so we
+    // simply let it do that and then extract the argument later.
+    auto output_end = out.size();
+    Try(ParseGroup());
+
+    // Done parsing. Extract the argument.
+    auto arg = out.substr(output_end);
+    out.resize(output_end);
+    return arg;
 }
 
-void TeXToHtmlConverter::HandleUnknownMacro(std::string_view macro) {
-    if (auto res = backend.ops.handle_unknown_macro(*this, macro); not res)
-        backend.error("{}", res.error());
+auto TeXToHtmlConverter::HandleUnknownMacro(std::string_view macro) -> Result<> {
+    Try(backend.ops.handle_unknown_macro(*this, macro));
+    return {};
 }
 
-void TeXToHtmlConverter::ProcessMacro() {
+auto TeXToHtmlConverter::ParseContent(i32 braces) -> Result<> {
+    while (not input.empty()) {
+        Append(input.take_until_any("\\${}"));
+        if (input.consume('}')) {
+            braces--;
+            if (braces == 0) return {};
+            if (braces < 0) return Error("Too many '}}'s!");
+        }
+
+        else if (input.consume('{')) braces++;
+        else if (input.consume('\\')) Try(ParseMacro());
+        else if (input.consume('$')) { // TODO: Render maths.
+            AppendRaw("$");
+            Append(input.take_until('$'));
+            AppendRaw("$");
+        }
+    }
+
+    return Error("Unexpected end of input. Did you forget a '}}'?");
+}
+
+
+auto TeXToHtmlConverter::ParseGroup() -> Result<> {
+    Assert(input.consume('{'), "Expected brace");
+    if (input.consume('}')) return {}; // Empty group.
+    return ParseContent(1);
+}
+
+auto TeXToHtmlConverter::ParseMacro() -> Result<> {
     tempset suppress_output = plain_text_output;
+
+    // Yeet '\'.
+    Assert(input.consume('\\'), "Expected backslash");
+    if (input.empty()) return Error("Invalid macro escape sequence");
 
     // Found a macro; first, handle single-character macros.
     if (text::IsPunct(*input.front()) or input.starts_with(' ')) {
         switch (auto c = input.take()[0]) {
             // Discretionary hyphen.
-            case '-': AppendRaw("&shy;"); return;
+            case '-': AppendRaw("&shy;"); return {};
 
             // Space.
-            case ' ': AppendRaw(" "); return;
+            case ' ': AppendRaw(" "); return {};
 
             // Escaped characters.
-            case '&': AppendRaw("&amp;"); return;
-            case '%': AppendRaw("%"); return;
-            case '#': AppendRaw("#"); return;
+            case '&': AppendRaw("&amp;"); return {};
+            case '%': AppendRaw("%"); return {};
+            case '#': AppendRaw("#"); return {};
+            case '{': AppendRaw("{"); return {};
+            case '}': AppendRaw("}"); return {};
 
             // These should no longer exist at this point.
-            case '\\': backend.error("'\\\\' is not supported in this field"); return;
+            case '\\': return Error("'\\\\' is not supported in this field");
 
             // Unknown.
             default: return HandleUnknownMacro({&c, 1});
@@ -70,83 +115,48 @@ void TeXToHtmlConverter::ProcessMacro() {
     // separate the formatting from data.
     auto macro = input.take_while_any("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@");
     input.trim_front();
-    if (macro == "pf") SingleArgumentMacroToTag("uf-pf");
-    else if (macro == "s") SingleArgumentMacroToTag("uf-s");
-    else if (macro == "w") SingleArgumentMacroToTag("uf-w");
-    else if (macro == "textit") SingleArgumentMacroToTag("em");
-    else if (macro == "textbf") SingleArgumentMacroToTag("strong");
-    else if (macro == "textnf") SingleArgumentMacroToTag("uf-nf");
-    else if (macro == "senseref") SingleArgumentMacroToTag("uf-sense");
-    else if (macro == "Sup") SingleArgumentMacroToTag("sup");
-    else if (macro == "Sub") SingleArgumentMacroToTag("sub");
+    if (macro == "pf") Try(SingleArgumentMacroToTag("uf-pf"));
+    else if (macro == "s") Try(SingleArgumentMacroToTag("uf-s"));
+    else if (macro == "w") Try(SingleArgumentMacroToTag("uf-w"));
+    else if (macro == "textit") Try(SingleArgumentMacroToTag("em"));
+    else if (macro == "textbf") Try(SingleArgumentMacroToTag("strong"));
+    else if (macro == "textnf") Try(SingleArgumentMacroToTag("uf-nf"));
+    else if (macro == "senseref") Try(SingleArgumentMacroToTag("uf-sense"));
+    else if (macro == "Sup") Try(SingleArgumentMacroToTag("sup"));
+    else if (macro == "Sub") Try(SingleArgumentMacroToTag("sub"));
     else if (macro == "par") AppendRaw("</p><p>");
-    else if (macro == "L") DropArgAndAppendRaw("<uf-mut><sup>L</sup></uf-mut>");
-    else if (macro == "N") DropArgAndAppendRaw("<uf-mut><sup>N</sup></uf-mut>");
-    else if (macro == "ref" or macro == "label") DropArg();
-    else if (macro == "ldots") DropArgAndAppendRaw("&hellip;");
-    else if (macro == "this") DropArgAndAppendRaw(std::format("<uf-w>{}</uf-w>", backend.current_word)); // This has already been escaped; don’t escape it again.
+    else if (macro == "L") DropEmptyAndAppendRaw("<uf-mut><sup>L</sup></uf-mut>");
+    else if (macro == "N") DropEmptyAndAppendRaw("<uf-mut><sup>N</sup></uf-mut>");
+    else if (macro == "ref" or macro == "label") Try(DropArg());
+    else if (macro == "ldots") DropEmptyAndAppendRaw("&hellip;");
+    else if (macro == "this") DropEmptyAndAppendRaw(std::format("<uf-w>{}</uf-w>", backend.current_word)); // This has already been escaped; don’t escape it again.
     else if (macro == "ex" or macro == "comment") {} // Already handled when we split senses and examples.
-    else return HandleUnknownMacro(macro);
+    else Try(HandleUnknownMacro(macro));
+    return {};
 }
 
-auto TeXToHtmlConverter::Run() -> std::string {
-    // Process macros.
-    for (;;) {
-        Append(input.take_until_any("\\$"));
-        if (input.empty()) break;
-        if (input.consume('$')) {
-            tempset suppress_output = plain_text_output;
-            backend.error("Rendering arbitrary maths in the dictionary is not supported");
-            break;
-        }
-
-        // Yeet '\'.
-        input.drop();
-        if (input.empty()) {
-            backend.error("Invalid macro escape sequence");
-            break;
-        }
-
-        ProcessMacro();
-    }
-
+auto TeXToHtmlConverter::Run() -> Result<std::string> {
+    while (not input.empty()) Try(ParseContent(0));
     return out;
 }
 
-void TeXToHtmlConverter::SingleArgumentMacroToTag(std::string_view tag_name) {
+auto TeXToHtmlConverter::SingleArgumentMacroToTag(std::string_view tag_name) -> Result<> {
     // Drop everything until the argument brace. We’re not a LaTeX tokeniser, so we don’t
     // support stuff like `\fract1 2`, as much as I like to write it.
-    if (not stream{input.take_until('{')}.trim().empty())
-        backend.error("Sorry, macro arguments must be enclosed in braces");
+    if (not input.trim_front().starts_with('{'))
+        return Error("Sorry, macro arguments must be enclosed in braces");
 
-    // Drop the opening brace.
-    input.drop();
-
-    // Everything until the next closing brace is our argument, but we also need to handle
-    // nested macros properly.
     AppendRaw(std::format("<{}>", tag_name));
-    while (not input.empty()) {
-        auto arg = input.take_until_any("$\\}");
-        Append(arg);
-
-        // TODO: Render maths.
-        if (input.consume('$')) {
-            AppendRaw("$");
-            Append(input.take_until('$'));
-            AppendRaw("$");
-            continue;
-        }
-
-        if (input.consume('}')) {
-            AppendRaw(std::format("</{}>", tag_name));
-            return;
-        }
-
-        input.drop();
-        ProcessMacro();
-    }
+    Try(ParseGroup());
+    AppendRaw(std::format("</{}>", tag_name));
+    return {};
 }
 
 auto JsonBackend::tex_to_html(stream input, bool plain_text_output) -> std::string {
-    return TeXToHtmlConverter(*this, input, plain_text_output).Run();
+    auto res = TeXToHtmlConverter(*this, input, plain_text_output).Run();
+    if (not res) {
+        error("{}", res.error());
+        return "<error>";
+    }
+    return res.value();
 }
