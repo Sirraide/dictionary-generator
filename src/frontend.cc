@@ -227,12 +227,6 @@ void Generator::parse(std::string_view input_text) {
         line = line.take_until(U'#');
         backend.line = i;
 
-        // Warn about non-typographic quotes, after comment deletion
-        // because it’s technically fine to have them in comments.
-        if (line.contains(U'\'')) backend.error(
-            "Non-typographic quote! Please use ‘’ (and “” for nested quotes) instead!"
-        );
-
         // Skip empty lines.
         if (line.empty()) continue;
 
