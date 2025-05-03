@@ -21,17 +21,6 @@ auto FullStopDelimited(u32stream text) -> std::string {
 }
 }
 
-Generator::Generator(Backend& backend) : backend{backend} {
-    UErrorCode err{U_ZERO_ERROR};
-    transliterator = icu::Transliterator::createInstance(
-        "NFKD; [:M:] Remove; [:Punctuation:] Remove; NFC; Lower;",
-        UTRANS_FORWARD,
-        err
-    );
-
-    Assert(not U_FAILURE(err), "Failed to get NFKD normalizer: {}", u_errorName(err));
-}
-
 void Entry::emit(Backend& backend) const { // clang-format off
     backend.line = line;
     auto s = text::ToUTF8(word);
@@ -136,7 +125,7 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     if (parts.size() > +IPAPart) entry.ipa = text::ToUTF8(parts[+IPAPart]);
 
     // Create a canonicalised form of this entry for sorting.
-    auto nfkd = normalise_for_sorting(word);
+    auto nfkd = transliterator(word);
     entries.emplace_back(std::move(word), backend.line, std::move(nfkd), std::move(entry));
 }
 
@@ -149,12 +138,6 @@ void Generator::emit() {
     // Emit each entry.
     for (auto& entry : entries) entry.emit(backend);
     backend.print();
-}
-
-auto Generator::normalise_for_sorting(std::u32string_view word) const -> icu::UnicodeString {
-    auto nfkd = icu::UnicodeString::fromUTF32(reinterpret_cast<const UChar32*>(word.data()), i32(word.size()));
-    transliterator->transliterate(nfkd);
-    return nfkd;
 }
 
 void Generator::parse(std::string_view input_text) {
@@ -197,7 +180,7 @@ void Generator::parse(std::string_view input_text) {
                 entries.emplace_back(
                     std::u32string{word},
                     backend.line,
-                    normalise_for_sorting(word),
+                    transliterator(word),
                     RefEntry{text::ToUTF8(target)}
                 );
             }

@@ -12,7 +12,7 @@ namespace {
 auto NormaliseForSearch(std::string_view value) -> std::string {
     // Do all filtering in UTF32 land since we need to iterate over entire characters.
     auto haystack = text::ToUTF8(
-        text::Normalise(text::ToLower(text::ToUTF32(value)), text::NormalisationForm::NFKD).value()                              //
+        text::Normalise(text::ToLower(text::ToUTF32(value)), text::NormalisationForm::NFKD)                                //
         | vws::filter([](char32_t c) { return U"abcdefghijklłmnopqrstuvwxyzABCDEFGHIJKLŁMNOPQRSTUVWXYZ "sv.contains(c); }) //
         | rgs::to<std::u32string>()
     );
@@ -47,7 +47,7 @@ void JsonBackend::emit(std::string_view word, const FullEntry& data) {
     json& e = entries().emplace_back();
     e["word"] = current_word = tex_to_html(word);
     e["pos"] = tex_to_html(data.pos);
-    e["ipa"] = Normalise(not data.ipa.empty() ? data.ipa : ops.to_ipa(current_word), text::NormalisationForm::NFC).value();
+    e["ipa"] = Normalise(not data.ipa.empty() ? data.ipa : ops.to_ipa(current_word), text::NormalisationForm::NFC);
 
     auto EmitSense = [&](const FullEntry::Sense& sense) {
         json s;

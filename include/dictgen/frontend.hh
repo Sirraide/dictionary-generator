@@ -2,8 +2,8 @@
 #define PARSER_HH
 
 #include <base/Base.hh>
+#include <base/Text.hh>
 #include <dictgen/backends.hh>
-#include <unicode/translit.h>
 
 namespace dict {
 using namespace base;
@@ -15,7 +15,7 @@ struct Entry {
     i64 line = 0;
 
     /// Headword in NFKD for sorting.
-    icu::UnicodeString nfkd;
+    std::u32string nfkd;
 
     /// Data.
     Variant<RefEntry, FullEntry> data;
@@ -31,16 +31,15 @@ class Generator {
     std::vector<Entry> entries;
 
     /// A transliterator used to normalise headwords for sorting.
-    icu::Transliterator* transliterator;
+    text::Transliterator transliterator{"NFKD; [:M:] Remove; [:Punctuation:] Remove; NFC; Lower;"};
 
 public:
-    Generator(Backend& backend);
+    explicit Generator(Backend& backend) : backend(backend) {}
     void emit();
     void parse(std::string_view input_text);
 
 private:
     void create_full_entry(std::u32string word, std::vector<std::u32string> parts);
-    [[nodiscard]] auto normalise_for_sorting(std::u32string_view word) const -> icu::UnicodeString;
     [[nodiscard]] auto ops() -> LanguageOps& { return backend.ops; }
 };
 } // namespace dict
