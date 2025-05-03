@@ -170,10 +170,9 @@ target_include_directories(dictionary-generator PUBLIC include)
 
 ## Apply our options.
 target_link_libraries(dictionary-generator
-    PUBLIC libbase
-    PRIVATE _dictionary_generator_options nlohmann_json::nlohmann_json
+    PUBLIC libbase nlohmann_json::nlohmann_json
+    PRIVATE _dictionary_generator_options
 )
-
 
 ## ============================================================================
 ##  Testing
