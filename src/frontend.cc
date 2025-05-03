@@ -223,7 +223,7 @@ void Generator::parse(std::string_view input_text) {
 
     // Process the text.
     bool skipping = false;
-    for (auto [i, line] : u32stream(text).lines() | vws::enumerate) {
+    for (auto [i, line] : utils::enumerate(u32stream(text).lines())) {
         line = line.take_until(U'#');
         backend.line = i;
 
