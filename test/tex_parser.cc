@@ -6,7 +6,7 @@ using namespace dict;
 
 struct TestOps : LanguageOps {
     auto handle_unknown_macro(TeXToHtmlConverter&, std::string_view macro) -> Result<> override;
-    [[nodiscard]] auto to_ipa(std::string_view) -> std::string override { return "[[ipa]]"; }
+    [[nodiscard]] auto to_ipa(std::string_view) -> Result<std::string> override { return "[[ipa]]"; }
 };
 
 auto TestOps::handle_unknown_macro(TeXToHtmlConverter& conv, std::string_view macro) -> Result<> {

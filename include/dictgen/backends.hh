@@ -81,7 +81,7 @@ struct LanguageOps {
     ///
     /// This can return an empty string if we don’t care about including
     /// a phonetic representation of the word.
-    [[nodiscard]] virtual auto to_ipa(std::string_view) -> std::string = 0;
+    [[nodiscard]] virtual auto to_ipa(std::string_view) -> Result<std::string> = 0;
 };
 
 class TeXToHtmlConverter {

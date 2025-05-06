@@ -47,7 +47,16 @@ void JsonBackend::emit(std::string_view word, const FullEntry& data) {
     json& e = entries().emplace_back();
     e["word"] = current_word = tex_to_html(word);
     e["pos"] = tex_to_html(data.pos);
-    e["ipa"] = Normalise(not data.ipa.empty() ? data.ipa : ops.to_ipa(current_word), text::NormalisationForm::NFC);
+    e["ipa"] = Normalise([&] -> std::string_view {
+        // If the user provided IPA, use it.
+        if (not data.ipa.empty()) return data.ipa;
+
+        // Otherwise, call the conversion function.
+        auto ipa = ops.to_ipa(current_word);
+        if (ipa.has_value()) return ipa.value();
+        error("Could not convert '{}' to IPA: {}", word, ipa.error());
+        return "";
+    }(), text::NormalisationForm::NFC);
 
     auto EmitSense = [&](const FullEntry::Sense& sense) {
         json s;
