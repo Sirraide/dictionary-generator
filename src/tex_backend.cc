@@ -52,5 +52,5 @@ void TeXBackend::emit(std::string_view word, const RefEntry& data) {
 }
 
 void TeXBackend::emit_error(std::string error) {
-    std::print("\\ULTRAFRENCHERERROR{{ ERROR: {} }}", error);
+    std::println("\\ULTRAFRENCHERERROR{{ ERROR: {} }}", error);
 }

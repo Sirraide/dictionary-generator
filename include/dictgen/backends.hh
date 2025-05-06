@@ -134,6 +134,8 @@ public:
 
     i64 line = 0;
 
+    bool has_error = false;
+
     template <std::derived_from<Backend> BackendType, typename... Args>
     static auto New(Args&&... args) -> std::unique_ptr<Backend> {
         return std::unique_ptr<Backend>{new BackendType(std::forward<Args>(args)...)};
@@ -142,6 +144,7 @@ public:
     // Backend-specific error processing.
     template <typename... Args>
     void error(std::format_string<Args...> fmt, Args&&... args) {
+        has_error = true;
         emit_error(std::format("In Line {}: {}", line, std::format(fmt, std::forward<Args>(args)...)));
     }
 

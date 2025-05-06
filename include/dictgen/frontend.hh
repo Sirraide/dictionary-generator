@@ -35,7 +35,7 @@ class Generator {
 
 public:
     explicit Generator(Backend& backend) : backend(backend) {}
-    void emit();
+    [[nodiscard]] int emit();
     void parse(std::string_view input_text);
 
 private:

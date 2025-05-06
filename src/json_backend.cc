@@ -91,6 +91,6 @@ void JsonBackend::emit_error(std::string error) {
 }
 
 void JsonBackend::print() {
-    if (not errors.empty()) std::println("{}", errors);
+    if (not errors.empty()) std::println(stderr, "{}", errors);
     else std::println("{}", minify ? out.dump() : out.dump(4));
 }
