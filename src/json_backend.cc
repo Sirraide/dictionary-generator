@@ -74,7 +74,7 @@ void JsonBackend::emit(std::string_view word, const FullEntry& data) {
     };
 
     if (not data.etym.empty()) e["etym"] = tex_to_html(data.etym);
-    if (not data.primary_definition.def.empty()) e["def"] = EmitSense(data.primary_definition);
+    e["def"] = EmitSense(data.primary_definition);
     if (not data.forms.empty()) e["forms"] = tex_to_html(data.forms);
     if (not data.senses.empty()) {
         json& senses = e["senses"] = json::array();
@@ -99,7 +99,7 @@ void JsonBackend::emit_error(std::string error) {
     if (not errors.ends_with('\n')) errors += "\n";
 }
 
-void JsonBackend::print() {
-    if (not errors.empty()) std::println(stderr, "{}", errors);
-    else std::println("{}", minify ? out.dump() : out.dump(4));
+void JsonBackend::emit_all() {
+    if (has_error) output = std::move(errors);
+    else output = minify ? out.dump() : out.dump(4);
 }

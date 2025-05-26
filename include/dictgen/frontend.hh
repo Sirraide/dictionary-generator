@@ -23,6 +23,11 @@ struct Entry {
     void emit(Backend& backend) const;
 };
 
+struct EmitResult {
+    std::string backend_output;
+    bool has_error = false;
+};
+
 class Generator {
     /// Backend that we’re emitting code to.
     Backend& backend;
@@ -35,7 +40,7 @@ class Generator {
 
 public:
     explicit Generator(Backend& backend) : backend(backend) {}
-    [[nodiscard]] int emit();
+    [[nodiscard]] auto emit() -> EmitResult;
     void parse(std::string_view input_text);
 
 private:

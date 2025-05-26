@@ -131,6 +131,7 @@ protected:
 
 public:
     LanguageOps& ops;
+    std::string output;
 
     i64 line = 0;
 
@@ -138,21 +139,27 @@ public:
 
     template <std::derived_from<Backend> BackendType, typename... Args>
     static auto New(Args&&... args) -> std::unique_ptr<Backend> {
-        return std::unique_ptr<Backend>{new BackendType(std::forward<Args>(args)...)};
+        return std::unique_ptr<Backend>{new BackendType(LIBBASE_FWD(args)...)};
     }
 
     // Backend-specific error processing.
     template <typename... Args>
     void error(std::format_string<Args...> fmt, Args&&... args) {
         has_error = true;
-        emit_error(std::format("In Line {}: {}", line, std::format(fmt, std::forward<Args>(args)...)));
+        emit_error(std::format("In Line {}: {}", line, std::format(fmt, LIBBASE_FWD(args)...)));
+    }
+
+    // Print to the output.
+    template <typename... Args>
+    void print(std::format_string<Args...> fmt, Args&&... args) {
+        output += std::format(fmt, LIBBASE_FWD(args)...);
     }
 
     virtual ~Backend() = default;
     virtual void emit(std::string_view word, const RefEntry& data) = 0;
     virtual void emit(std::string_view word, const FullEntry& data) = 0;
     virtual void emit_error(std::string error) = 0;
-    virtual void print() = 0;
+    virtual void emit_all() = 0;
 };
 
 class JsonBackend final : public Backend {
@@ -169,7 +176,7 @@ public:
     void emit(std::string_view word, const FullEntry& data) override;
     void emit(std::string_view word, const RefEntry& data) override;
     void emit_error(std::string error) override;
-    void print() override;
+    void emit_all() override;
 
 private:
     auto entries() -> json& { return out["entries"]; }
@@ -192,7 +199,7 @@ public:
     void emit_error(std::string error) override;
 
     // This backend prints immediately during generation.
-    void print() override {} // No-op.
+    void emit_all() override {} // No-op.
 };
 } // namespace dict
 

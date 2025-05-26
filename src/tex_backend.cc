@@ -4,12 +4,12 @@
 using namespace dict;
 
 TeXBackend::TeXBackend(LanguageOps& ops, std::string filename) : Backend{ops} {
-    std::println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-    std::println("%%            This file was generated from {}", filename);
-    std::println("%%");
-    std::println("%%                         DO NOT EDIT");
-    std::println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-    std::println();
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+    print("%%            This file was generated from {}\n", filename);
+    print("%%\n");
+    print("%%                         DO NOT EDIT\n");
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+    print("\n");
 }
 
 void TeXBackend::emit(std::string_view word, const FullEntry& data) { // clang-format off
@@ -31,8 +31,8 @@ void TeXBackend::emit(std::string_view word, const FullEntry& data) { // clang-f
             );
     };
 
-    std::println(
-        "\\entry{{{}}}{{{}}}{{{}}}{{{}{}}}{{{}}}",
+    print(
+        "\\entry{{{}}}{{{}}}{{{}}}{{{}{}}}{{{}}}\n",
         word,
         data.pos,
         data.etym,
@@ -48,9 +48,9 @@ void TeXBackend::emit(std::string_view word, const FullEntry& data) { // clang-f
 }
 
 void TeXBackend::emit(std::string_view word, const RefEntry& data) {
-    std::println("\\refentry{{{}}}{{{}}}", word, data);
+    print("\\refentry{{{}}}{{{}}}\n", word, data);
 }
 
 void TeXBackend::emit_error(std::string error) {
-    std::println("\\ULTRAFRENCHERERROR{{ ERROR: {} }}", error);
+    print("\\ULTRAFRENCHERERROR{{ ERROR: {} }}\n", error);
 }

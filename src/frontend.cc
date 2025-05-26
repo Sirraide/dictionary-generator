@@ -129,7 +129,7 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     entries.emplace_back(std::move(word), backend.line, std::move(nfkd), std::move(entry));
 }
 
-int Generator::emit() {
+auto Generator::emit() -> EmitResult {
     // Sort the entries.
     rgs::stable_sort(entries, [](const auto& a, const auto& b) {
         return a.nfkd == b.nfkd ? a.word < b.word : a.nfkd < b.nfkd;
@@ -137,8 +137,8 @@ int Generator::emit() {
 
     // Emit each entry.
     for (auto& entry : entries) entry.emit(backend);
-    backend.print();
-    return backend.has_error ? 1 : 0;
+    backend.emit_all();
+    return {backend.output, backend.has_error};
 }
 
 void Generator::parse(std::string_view input_text) {
