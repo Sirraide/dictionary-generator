@@ -74,7 +74,7 @@ void JsonBackend::emit(std::string_view word, const FullEntry& data) {
     };
 
     if (not data.etym.empty()) e["etym"] = tex_to_html(data.etym);
-    e["def"] = EmitSense(data.primary_definition);
+    if (not data.primary_definition.def.empty()) e["def"] = EmitSense(data.primary_definition);
     if (not data.forms.empty()) e["forms"] = tex_to_html(data.forms);
     if (not data.senses.empty()) {
         json& senses = e["senses"] = json::array();

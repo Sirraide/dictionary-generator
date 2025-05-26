@@ -35,14 +35,24 @@ void CheckError(std::string_view input, const std::string& substr) {
     CHECK_THAT(output, Catch::Matchers::ContainsSubstring(substr));
 }
 
-TEST_CASE("JSON backend: primary definition comment is preserved even if there is no primary definiton") {
-    CheckContains(
-        R"dict(
-róc|n.|roche|
-    \comment Spelt with ó to distinguish it from raúc̣ ‘fang’.
-    \\ Rock, mass of stone \comment See also \w{róc̣}
-    \\\s{indef} Rock (material)
-)dict",
-        "Spelt with ó to distinguish it from raúc̣ ‘fang’"
+TEST_CASE("JSON backend: Disallow \\comment and \\ex if the definition is empty") {
+    CheckError(
+        "x|y|z|\\comment abcd",
+        "\\comment is not allowed in an empty sense or empty primary definition"
+    );
+
+    CheckError(
+        "x|y|z|\\\\\\comment abcd",
+        "\\comment is not allowed in an empty sense or empty primary definition"
+    );
+
+    CheckError(
+        "x|y|z|\\ex abcd",
+        "\\ex is not allowed in an empty sense or empty primary definition"
+    );
+
+    CheckError(
+        "x|y|z|\\\\\\ex abcd",
+        "\\ex is not allowed in an empty sense or empty primary definition"
     );
 }

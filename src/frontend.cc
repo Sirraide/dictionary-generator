@@ -87,14 +87,25 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
 
         // Find the sense comment or first example, if any, and depending on which comes first.
         FullEntry::Sense s;
-        s.def = FullStopDelimited(sense.trim_front().take_until(CommentOrEx));
+        auto def_text = sense.trim_front().take_until(CommentOrEx);
+        bool def_is_empty = u32stream(def_text).trim().empty();
+        s.def = FullStopDelimited(def_text);
 
         // Sense has a comment.
-        if (sense.trim_front().consume(Comment))
+        if (sense.trim_front().consume(Comment)) {
+            if (def_is_empty) backend.error(
+                "\\comment is not allowed in an empty sense or empty primary definition. Use \\textit{{...}} instead."
+            );
+
             s.comment = FullStopDelimited(sense.trim_front().take_until(Ex));
+        }
 
         // At this point, we should either be at the end or at an example.
         while (sense.trim_front().consume(Ex)) {
+            if (def_is_empty) backend.error(
+                "\\ex is not allowed in an empty sense or empty primary definition."
+            );
+
             auto& ex = s.examples.emplace_back();
             ex.text = FullStopDelimited(sense.trim_front().take_until(CommentOrEx));
             if (sense.consume(Comment))
