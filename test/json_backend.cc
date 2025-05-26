@@ -14,7 +14,7 @@ auto Emit(std::string_view input) -> EmitResult {
     JsonBackend backend{ops, false};
     Generator gen{backend};
     gen.parse(input);
-    return gen.emit();
+    return gen.emit_to_string();
 }
 
 void CheckContains(std::string_view input, const std::string& substr) {

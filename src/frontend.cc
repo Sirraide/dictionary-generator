@@ -1,5 +1,6 @@
 #include <base/Text.hh>
 #include <dictgen/frontend.hh>
+#include <print>
 
 using namespace dict;
 
@@ -129,7 +130,7 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     entries.emplace_back(std::move(word), backend.line, std::move(nfkd), std::move(entry));
 }
 
-auto Generator::emit() -> EmitResult {
+auto Generator::emit_to_string() -> EmitResult {
     // Sort the entries.
     rgs::stable_sort(entries, [](const auto& a, const auto& b) {
         return a.nfkd == b.nfkd ? a.word < b.word : a.nfkd < b.nfkd;
@@ -139,6 +140,17 @@ auto Generator::emit() -> EmitResult {
     for (auto& entry : entries) entry.emit(backend);
     backend.emit_all();
     return {backend.output, backend.has_error};
+}
+
+int Generator::emit() {
+    auto [output, has_error] = emit_to_string();
+    if (has_error) {
+        std::println(stderr, "{}", output);
+        return 1;
+    }
+
+    std::println("{}", output);
+    return 0;
 }
 
 void Generator::parse(std::string_view input_text) {

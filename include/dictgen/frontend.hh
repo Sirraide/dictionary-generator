@@ -40,7 +40,8 @@ class Generator {
 
 public:
     explicit Generator(Backend& backend) : backend(backend) {}
-    [[nodiscard]] auto emit() -> EmitResult;
+    [[nodiscard]] int emit();
+    [[nodiscard]] auto emit_to_string() -> EmitResult;
     void parse(std::string_view input_text);
 
 private:
