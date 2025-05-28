@@ -172,7 +172,7 @@ class JsonBackend final : public Backend {
     bool minify;
 
     /// A transliterator used to normalise headwords for searching.
-    text::Transliterator search_transliterator{"NFKD; Latin-ASCII; [:M:] Remove; [:Punctuation:] Remove; NFC; Lower"};
+    text::Transliterator search_transliterator{"NFKD; Latin-ASCII; [^a-z A-Z\\ ] Remove; Lower"};
 
 public:
     explicit JsonBackend(LanguageOps& ops, bool minify);

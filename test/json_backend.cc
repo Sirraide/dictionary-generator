@@ -67,4 +67,5 @@ TEST_CASE("JSON backend: search normalisation") {
     CHECK(J.NormaliseForSearch("łŁlL") == "llll");
     CHECK(J.NormaliseForSearch("®©™@ç") == "rctmc");
     CHECK(J.NormaliseForSearch("ḍriłv́ẹ́âǎ") == "drilveaa");
+    CHECK(J.NormaliseForSearch("+-/*!?\"$%&'()[]{},._^`<>:;=~\\@") == "");
 }
