@@ -56,3 +56,15 @@ TEST_CASE("JSON backend: Disallow \\comment and \\ex if the definition is empty"
         "\\ex is not allowed in an empty sense or empty primary definition"
     );
 }
+
+TEST_CASE("JSON backend: search normalisation") {
+    TestOps ops;
+    JsonBackend J{ops, false};
+    CHECK(J.NormaliseForSearch("abcd") == "abcd");
+    CHECK(J.NormaliseForSearch("ábćd") == "abcd");
+    CHECK(J.NormaliseForSearch("ạ́́bć̣́d") == "abcd");
+    CHECK(J.NormaliseForSearch("  a  bc’’' '‘‘..-d-") == "a bc d");
+    CHECK(J.NormaliseForSearch("łŁlL") == "llll");
+    CHECK(J.NormaliseForSearch("®©™@ç") == "rctmc");
+    CHECK(J.NormaliseForSearch("ḍriłv́ẹ́âǎ") == "drilveaa");
+}

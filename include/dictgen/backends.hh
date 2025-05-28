@@ -2,6 +2,7 @@
 #define BACKENDS_HH
 
 #include <base/Base.hh>
+#include <base/Text.hh>
 #include <nlohmann/json.hpp>
 
 namespace dict {
@@ -170,6 +171,9 @@ class JsonBackend final : public Backend {
     std::string current_word = "<error: \\this undefined>";
     bool minify;
 
+    /// A transliterator used to normalise headwords for searching.
+    text::Transliterator search_transliterator{"NFKD; Latin-ASCII; [:M:] Remove; [:Punctuation:] Remove; NFC; Lower"};
+
 public:
     explicit JsonBackend(LanguageOps& ops, bool minify);
 
@@ -179,6 +183,7 @@ public:
     void emit_all() override;
 
 private:
+    auto NormaliseForSearch(std::string_view value) -> std::string;
     auto entries() -> json& { return out["entries"]; }
     auto refs() -> json& { return out["refs"]; }
     auto tex_to_html(stream input, bool plain_text_output = false) -> std::string;

@@ -192,10 +192,7 @@ if (DEFINED BUILD_DICT_GEN_TESTS)
     file(GLOB_RECURSE test_sources test/*.cc)
     add_executable(tests ${test_sources})
     target_link_libraries(tests PRIVATE dictionary-generator Catch2::Catch2WithMain)
-
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        target_compile_options(tests PRIVATE -fms-extensions -fdeclspec)
-    endif()
+    target_compile_options(tests PRIVATE -fms-extensions -fdeclspec -fno-access-control)
 
     target_compile_definitions(tests PRIVATE
         "LIBBASE_TESTING_BINARY_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\""

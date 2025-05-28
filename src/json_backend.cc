@@ -5,17 +5,18 @@
 
 using namespace dict;
 
-namespace {
+JsonBackend::JsonBackend(LanguageOps& ops, bool minify)
+    : Backend{ops}, minify{minify} {
+    out = json::object();
+    refs() = json::array();
+    entries() = json::array();
+}
+
 // IMPORTANT: Remember to update the function with the same name in the
 // code for the ULTRAFRENCH dictionary page on nguh.org if the output of
 // this function changes.
-auto NormaliseForSearch(std::string_view value) -> std::string {
-    // Do all filtering in UTF32 land since we need to iterate over entire characters.
-    auto haystack = text::ToUTF8(
-        text::Normalise(text::ToLower(text::ToUTF32(value)), text::NormalisationForm::NFKD)                                //
-        | vws::filter([](char32_t c) { return U"abcdefghijklłmnopqrstuvwxyzABCDEFGHIJKLŁMNOPQRSTUVWXYZ "sv.contains(c); }) //
-        | rgs::to<std::u32string>()
-    );
+auto JsonBackend::NormaliseForSearch(std::string_view value) -> std::string {
+    auto haystack = search_transliterator(value);
 
     // The steps below only apply to the haystack, not the needle, and should
     // NOT be applied on the frontend:
@@ -33,14 +34,6 @@ auto NormaliseForSearch(std::string_view value) -> std::string {
             | rgs::to<std::set>(),
         " "
     );
-}
-}
-
-JsonBackend::JsonBackend(LanguageOps& ops, bool minify)
-    : Backend{ops}, minify{minify} {
-    out = json::object();
-    refs() = json::array();
-    entries() = json::array();
 }
 
 void JsonBackend::emit(std::string_view word, const FullEntry& data) {
