@@ -35,6 +35,9 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     using enum FullEntry::Part;
     FullEntry entry;
 
+    if (not disallow_specials(word, "in the lemma"))
+        return;
+
     // Preprocessing.
     if (auto res = ops().preprocess_full_entry(parts); not res) {
         backend.error("Preprocessing error: {}", res.error());
@@ -141,6 +144,19 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     entries.emplace_back(std::move(word), backend.line, std::move(nfkd), std::move(entry));
 }
 
+bool Generator::disallow_specials(u32stream text, std::string_view message) {
+    auto Disallow = [&](std::u32string_view what) {
+        if (text.contains(what)) {
+            backend.error("'{}' cannot be used {}", what, message);
+            return false;
+        }
+
+        return true;
+    };
+
+    return Disallow(U"\\ex") and Disallow(U"\\comment") and Disallow(U"\\\\");
+}
+
 auto Generator::emit_to_string() -> EmitResult {
     // Sort the entries.
     rgs::stable_sort(entries, [](const auto& a, const auto& b) {
@@ -197,6 +213,14 @@ void Generator::parse(std::string_view input_text) {
         // comma-separated list of references, the rhs is the
         // actual definition.
         if (not line.contains(U'|')) {
+            if (not line.contains(U'>')) {
+                backend.error("An entry must contain at least one '|' or '>'");
+                return;
+            }
+
+            if (not disallow_specials(line, "in a reference entry"))
+                return;
+
             auto from = u32stream(line.take_until(U'>')).trim();
             auto target = line.drop().trim().text();
             for (auto entry : from.split(U",")) {
@@ -232,7 +256,7 @@ void Generator::parse(std::string_view input_text) {
     bool skipping = false;
     for (auto [i, line] : utils::enumerate(u32stream(text).lines())) {
         line = line.take_until(U'#');
-        backend.line = i;
+        backend.line = i + 1;
 
         // Skip empty lines.
         if (line.empty()) continue;

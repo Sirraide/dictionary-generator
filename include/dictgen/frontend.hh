@@ -46,6 +46,7 @@ public:
 
 private:
     void create_full_entry(std::u32string word, std::vector<std::u32string> parts);
+    bool disallow_specials(u32stream text, std::string_view message);
     [[nodiscard]] auto ops() -> LanguageOps& { return backend.ops; }
 };
 } // namespace dict

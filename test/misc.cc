@@ -20,40 +20,40 @@ auto Emit(std::string_view input) -> EmitResult {
 void CheckContains(std::string_view input, const std::string& substr) {
     auto [output, has_error] = Emit(input);
     CHECK(not has_error);
-    CHECK_THAT(output, Catch::Matchers::ContainsSubstring(substr));
+    CHECK_THAT(std::string(stream(output).trim().text()), Catch::Matchers::ContainsSubstring(substr));
 }
 
 void CheckExact(std::string_view input, std::string_view expected) {
     auto [output, has_error] = Emit(input);
     CHECK(not has_error);
-    CHECK(output == expected);
+    CHECK(std::string(stream(output).trim().text()) == expected);
 }
 
 void CheckError(std::string_view input, const std::string& substr) {
     auto [output, has_error] = Emit(input);
     CHECK(has_error);
-    CHECK_THAT(output, Catch::Matchers::ContainsSubstring(substr));
+    CHECK(std::string(stream(output).trim().text()) == substr);
 }
 
 TEST_CASE("JSON backend: Disallow \\comment and \\ex if the definition is empty") {
     CheckError(
         "x|y|z|\\comment abcd",
-        "\\comment is not allowed in an empty sense or empty primary definition"
+        "In Line 1: \\comment is not allowed in an empty sense or empty primary definition. Use \\textit{...} instead."
     );
 
     CheckError(
         "x|y|z|\\\\\\comment abcd",
-        "\\comment is not allowed in an empty sense or empty primary definition"
+        "In Line 1: \\comment is not allowed in an empty sense or empty primary definition. Use \\textit{...} instead."
     );
 
     CheckError(
         "x|y|z|\\ex abcd",
-        "\\ex is not allowed in an empty sense or empty primary definition"
+        "In Line 1: \\ex is not allowed in an empty sense or empty primary definition."
     );
 
     CheckError(
         "x|y|z|\\\\\\ex abcd",
-        "\\ex is not allowed in an empty sense or empty primary definition"
+        "In Line 1: \\ex is not allowed in an empty sense or empty primary definition."
     );
 }
 
@@ -68,4 +68,56 @@ TEST_CASE("JSON backend: search normalisation") {
     CHECK(J.NormaliseForSearch("®©™@ç") == "rctmc");
     CHECK(J.NormaliseForSearch("ḍriłv́ẹ́âǎ") == "drilveaa");
     CHECK(J.NormaliseForSearch("+-/*!?\"$%&'()[]{},._^`<>:;=~\\@") == "");
+}
+
+TEST_CASE("Bogus entries") {
+    CheckError(
+        "\\\\a|||",
+        "In Line 1: '\\\\' cannot be used in the lemma"
+    );
+
+    CheckError(
+        "\\comment|||",
+        "In Line 1: '\\comment' cannot be used in the lemma"
+    );
+
+    CheckError(
+        "\\ex|||",
+        "In Line 1: '\\ex' cannot be used in the lemma"
+    );
+
+    CheckError(
+        "foo",
+        "In Line 1: An entry must contain at least one '|' or '>'"
+    );
+
+    CheckError(
+        "\\comment > b",
+        "In Line 1: '\\comment' cannot be used in a reference entry"
+    );
+
+    CheckError(
+        "a > \\comment",
+        "In Line 1: '\\comment' cannot be used in a reference entry"
+    );
+
+    CheckError(
+        "\\ex > b",
+        "In Line 1: '\\ex' cannot be used in a reference entry"
+    );
+
+    CheckError(
+        "a > \\ex",
+        "In Line 1: '\\ex' cannot be used in a reference entry"
+    );
+
+    CheckError(
+        "\\\\ > b",
+        "In Line 1: '\\\\' cannot be used in a reference entry"
+    );
+
+    CheckError(
+        "a > \\\\",
+        "In Line 1: '\\\\' cannot be used in a reference entry"
+    );
 }

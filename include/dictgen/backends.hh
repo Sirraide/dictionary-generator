@@ -134,7 +134,7 @@ public:
     LanguageOps& ops;
     std::string output;
 
-    i64 line = 0;
+    i64 line = 1;
 
     bool has_error = false;
 
