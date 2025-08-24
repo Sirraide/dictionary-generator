@@ -50,43 +50,41 @@ auto TypstBackend::convert(stream input) -> std::string {
 }
 
 void TypstBackend::emit(std::string_view word, const RefEntry& data) {
-    output += std::format("#dictionary-reference[{}][{}]\n", word, data);
+    output += std::format("#dictionary-reference({}, {})\n", word, data);
 }
 
 void TypstBackend::emit(std::string_view word, const FullEntry& data) {
     auto FormatSense = [&](const FullEntry::Sense& s) -> std::string {
-        // Omit the sense if it is entirely empty.
-        if (s.comment.empty() and s.examples.empty() and s.def.empty()) return "[]";
+        if (s.comment.empty() and s.examples.empty() and s.def.empty())
+            return "(def: [], comment: [], examples: ())";
 
-        // Add the definition.
-        auto sense = std::format("dictionary-sense([{}]", convert(s.def));
+        auto sense = std::format(
+            "(def: [{}], comment: [{}], examples: (",
+            convert(s.def),
+            convert(s.comment)
+        );
 
-        // Add the comment.
-        if (s.comment.empty()) sense += ",[]";
-        else sense += std::format(",dictionary-comment[{}]", convert(s.comment));
-
-        // Add the examples.
         for (const auto& e : s.examples) {
-            sense += ",";
-            sense += std::format("dictionary-example([{}]", convert(e.text));
-            if (e.comment.empty()) sense += ",[]";
-            else sense += std::format(",dictionary-comment[{}]", convert(e.comment));
-            sense += ")";
+            sense += std::format(
+                "(text: [{}], comment: [{}]),",
+                convert(e.text),
+                convert(e.comment)
+            );
         }
 
-        sense += ")";
+        sense += "))";
         return sense;
     };
 
     current_word = word;
     output += std::format(
-        "#dictionary-entry([{}],[{}],[{}],[{}],{}{})\n",
+        "#dictionary-entry((word: [{}], pos: [{}], etym: [{}], forms: [{}], prim_def: {}, senses: ({})))\n",
         word,
         convert(data.pos),
         convert(data.etym),
         convert(data.forms),
         FormatSense(data.primary_definition),
-        utils::join(data.senses, "", ",{}", FormatSense)
+        utils::join(data.senses, "", "{},", FormatSense)
     );
 }
 
