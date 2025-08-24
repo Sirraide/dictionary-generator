@@ -105,5 +105,7 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
             ")"
         "))"
     );
+
+    Check("a > b", "#dictionary-reference([a],[b])");
 }
 
