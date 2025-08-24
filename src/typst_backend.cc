@@ -50,7 +50,7 @@ auto TypstBackend::convert(stream input) -> std::string {
 }
 
 void TypstBackend::emit(std::string_view word, const RefEntry& data) {
-    output += std::format("#dictionary-reference[{}][{}]", word, data);
+    output += std::format("#dictionary-reference[{}][{}]\n", word, data);
 }
 
 void TypstBackend::emit(std::string_view word, const FullEntry& data) {
@@ -70,7 +70,7 @@ void TypstBackend::emit(std::string_view word, const FullEntry& data) {
 
     current_word = word;
     output += std::format(
-        "#dictionary-entry([{}],[{}],[{}],[{}{}][{}]",
+        "#dictionary-entry([{}],[{}],[{}],[{}{}][{}]\n",
         word,
         convert(data.pos),
         convert(data.etym),
