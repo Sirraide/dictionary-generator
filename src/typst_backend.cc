@@ -59,18 +59,18 @@ void TypstBackend::emit(std::string_view word, const FullEntry& data) {
         if (s.comment.empty() and s.examples.empty() and s.def.empty()) return "";
 
         // Add the definition.
-        auto sense = std::format("#dictionary-sense([{}]", convert(s.def));
+        auto sense = std::format("dictionary-sense([{}]", convert(s.def));
 
         // Add the comment.
         if (s.comment.empty()) sense += ",[]";
-        else sense += std::format(",#dictionary-comment[{}]", convert(s.comment));
+        else sense += std::format(",dictionary-comment[{}]", convert(s.comment));
 
         // Add the examples.
         for (const auto& e : s.examples) {
             sense += ",";
-            sense += std::format("#dictionary-example([{}]", convert(e.text));
+            sense += std::format("dictionary-example([{}]", convert(e.text));
             if (e.comment.empty()) sense += ",[]";
-            else sense += std::format(",#dictionary-comment[{}]", convert(e.comment));
+            else sense += std::format(",dictionary-comment[{}]", convert(e.comment));
             sense += ")";
         }
 

@@ -27,23 +27,23 @@ void Check(std::string_view input, std::string_view output) {
 TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
     Check(
         "aub’heír|v. (in)tr.|obéir|To obey (+\\s{part} sbd.)",
-        "#dictionary-entry([aub’heír],[v. (in)tr.],[obéir],[],#dictionary-sense([To obey (\\+#smallcaps[part] sbd.).],[]))"
+        "#dictionary-entry([aub’heír],[v. (in)tr.],[obéir],[],dictionary-sense([To obey (\\+#smallcaps[part] sbd.).],[]))"
     );
 
     Check(
         "ánvé|v. tr.|animer|+\\s{acc} To bring to life, animate",
-        "#dictionary-entry([ánvé],[v. tr.],[animer],[],#dictionary-sense([\\+#smallcaps[acc] To bring to life, animate.],[]))"
+        "#dictionary-entry([ánvé],[v. tr.],[animer],[],dictionary-sense([\\+#smallcaps[acc] To bring to life, animate.],[]))"
     );
 
     Check(
         "A|B|C|D\\\\ E\\comment F\\ex G\\comment H",
         "#dictionary-entry("
             "[A],[B],[C],[],"
-            "#dictionary-sense([D.],[]),"
-            "#dictionary-sense("
+            "dictionary-sense([D.],[]),"
+            "dictionary-sense("
                 "[E.],"
-                "#dictionary-comment[F.],"
-                "#dictionary-example([G.],#dictionary-comment[H.])"
+                "dictionary-comment[F.],"
+                "dictionary-example([G.],dictionary-comment[H.])"
             ")"
         ")"
     );
