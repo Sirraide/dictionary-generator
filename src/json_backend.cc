@@ -10,6 +10,69 @@ JsonBackend::JsonBackend(LanguageOps& ops, bool minify)
     out = json::object();
     refs() = json::array();
     entries() = json::array();
+    html_escaper.add("<", "&lt;");
+    html_escaper.add(">", "&gt;");
+    html_escaper.add("§~", "grammar"); // FIXME: Make section references work somehow.
+    html_escaper.add("~", "&nbsp;");
+    html_escaper.add("-", "&shy;");
+    html_escaper.add("&", "&amp;");
+}
+
+struct JsonBackend::Renderer : dict::Renderer {
+    JsonBackend& backend;
+    const bool strip_formatting;
+    Renderer(JsonBackend& backend, bool strip_formatting)
+        : backend{backend}, strip_formatting{strip_formatting} {}
+
+    void render_macro(const MacroNode& n) override;
+    void render_text(std::string_view text) override;
+    auto tag_name(Macro m) -> std::string_view;
+};
+
+void JsonBackend::Renderer::render_macro(const MacroNode& n) {
+    if (strip_formatting) return;
+    if (auto s = tag_name(n.macro); not s.empty()) {
+        out += std::format("<{}>", s);
+        render(n.args);
+        out += std::format("</{}>", s);
+        return;
+    }
+
+    switch (n.macro) {
+        default: Unreachable("Unsupported macro '{}'", enchantum::to_string(n.macro));
+        case Macro::Ellipsis: out += "&hellip;"; break;
+        case Macro::ParagraphBreak: out += "</p><p>"; break;
+        case Macro::This:
+            if (backend.current_word.empty()) backend.error("'\\this' is not allowed here");
+            out += backend.current_word;
+            break;
+    }
+}
+
+void JsonBackend::Renderer::render_text(std::string_view text) {
+    if (stream{text}.contains_any("<>§~-&")) out += backend.html_escaper.replace(text);
+    else out += text;
+}
+
+auto JsonBackend::Renderer::tag_name(Macro m) -> std::string_view {
+    switch (m) {
+        case Macro::Bold: return "strong";
+        case Macro::Italic: return "em";
+        case Macro::Lemma: return "f-w";
+        case Macro::Normal: return "f-nf";
+        case Macro::Sense: return "f-sense";
+        case Macro::SmallCaps: return "f-s";
+        case Macro::Subscript: return "sub";
+        case Macro::Superscript: return "sup";
+
+        // Not a tag.
+        case Macro::Ellipsis:
+        case Macro::ParagraphBreak:
+        case Macro::This:
+            return "";
+    }
+
+    Unreachable("Invalid macro");
 }
 
 // IMPORTANT: Remember to update the function with the same name in the
@@ -92,7 +155,19 @@ void JsonBackend::emit_error(std::string error) {
     if (not errors.ends_with('\n')) errors += "\n";
 }
 
-void JsonBackend::emit_all() {
+void JsonBackend::finish() {
     if (has_error) output = std::move(errors);
     else output = minify ? out.dump() : out.dump(4);
+}
+
+auto JsonBackend::tex_to_html(stream input, bool strip_macros) -> std::string {
+    auto res = TexParser::Parse(*this, input);
+    if (not res.has_value()) {
+        error("{}", res.error());
+        return "";
+    }
+
+    Renderer r{*this, strip_macros};
+    r.render(*res.value());
+    return std::move(r.out);
 }

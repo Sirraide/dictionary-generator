@@ -165,7 +165,7 @@ auto Generator::emit_to_string() -> EmitResult {
 
     // Emit each entry.
     for (auto& entry : entries) entry.emit(backend);
-    backend.emit_all();
+    backend.finish();
     return {backend.output, backend.has_error};
 }
 

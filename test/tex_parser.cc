@@ -5,30 +5,32 @@
 using namespace dict;
 
 struct TestOps : LanguageOps {
-    auto handle_unknown_macro(TeXToHtmlConverter&, std::string_view macro) -> Result<> override;
+    auto handle_unknown_macro(TexParser&, std::string_view macro) -> Result<Node::Ptr> override;
     [[nodiscard]] auto to_ipa(std::string_view) -> Result<std::string> override { return "[[ipa]]"; }
 };
 
-auto TestOps::handle_unknown_macro(TeXToHtmlConverter& conv, std::string_view macro) -> Result<> {
-    if (macro == "/") {
-        conv.append("Found /!");
-        return {};
+auto TestOps::handle_unknown_macro(TexParser& p, std::string_view macro) -> Result<Node::Ptr> {
+    if (macro == "/") return p.text("Found /!");
+    if (macro == "definedintestops") return p.text("This is our test macro");
+    if (macro == "xyz") {
+        auto arg = Try(p.parse_arg());
+        return p.group(
+            p.text("<foo>", true),
+            std::move(arg),
+            p.text("</foo>", true)
+        );
     }
 
-    if (macro == "definedintestops") {
-        conv.append("This is our test macro");
-        return {};
-    }
-
-    if (macro == "xyz") return conv.single_argument_macro_to_tag("foo");
-
-    return LanguageOps::handle_unknown_macro(conv, macro);
+    return LanguageOps::handle_unknown_macro(p, macro);
 }
 
-auto Convert(std::string_view input, bool plain_text_output = false) -> std::string {
+auto Convert(std::string_view input, bool strip_macros = false) -> std::string {
     TestOps ops;
-    TeXToHtmlConverter conv{ops, "the-current-word", input, plain_text_output};
-    return conv.run().value();
+    JsonBackend j{ops, false};
+    j.current_word = "<f-w>the-current-word</f-w>";
+    auto text = j.tex_to_html(input, strip_macros);
+    if (j.has_error) throw std::runtime_error(j.errors);
+    return text;
 }
 
 TEST_CASE("Parse plain text") {
