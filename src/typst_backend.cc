@@ -56,7 +56,7 @@ void TypstBackend::emit(std::string_view word, const RefEntry& data) {
 void TypstBackend::emit(std::string_view word, const FullEntry& data) {
     auto FormatSense = [&](const FullEntry::Sense& s) -> std::string {
         // Omit the sense if it is entirely empty.
-        if (s.comment.empty() and s.examples.empty() and s.def.empty()) return "";
+        if (s.comment.empty() and s.examples.empty() and s.def.empty()) return "[]";
 
         // Add the definition.
         auto sense = std::format("dictionary-sense([{}]", convert(s.def));

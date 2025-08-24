@@ -47,5 +47,7 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
             ")"
         ")"
     );
+
+    Check("a|b|c|\\\\d", "#dictionary-entry([a],[b],[c],[],[],dictionary-sense([d.],[]))");
 }
 
