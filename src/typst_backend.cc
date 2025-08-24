@@ -55,28 +55,38 @@ void TypstBackend::emit(std::string_view word, const RefEntry& data) {
 
 void TypstBackend::emit(std::string_view word, const FullEntry& data) {
     auto FormatSense = [&](const FullEntry::Sense& s) -> std::string {
+        // Omit the sense if it is entirely empty.
         if (s.comment.empty() and s.examples.empty() and s.def.empty()) return "";
-        auto sense = std::format("#dictionary-sense([]", convert(s.def));
-        if (not s.comment.empty()) sense += std::format("#dictionary-comment[{}]", convert(s.comment));
+
+        // Add the definition.
+        auto sense = std::format("#dictionary-sense([{}]", convert(s.def));
+
+        // Add the comment.
+        if (s.comment.empty()) sense += ",[]";
+        else sense += std::format(",#dictionary-comment[{}]", convert(s.comment));
+
+        // Add the examples.
         for (const auto& e : s.examples) {
-            sense += ",[";
-            if (not e.comment.empty()) sense += std::format("#dictionary-comment[{}]", convert(e.comment));
-            sense += std::format("#dictionary-example[{}]", convert(e.text));
-            sense += "]";
+            sense += ",";
+            sense += std::format("#dictionary-example([{}]", convert(e.text));
+            if (e.comment.empty()) sense += ",[]";
+            else sense += std::format(",#dictionary-comment[{}]", convert(e.comment));
+            sense += ")";
         }
+
         sense += ")";
         return sense;
     };
 
     current_word = word;
     output += std::format(
-        "#dictionary-entry([{}],[{}],[{}],[{}{}][{}]\n",
+        "#dictionary-entry([{}],[{}],[{}],[{}],{}{})\n",
         word,
         convert(data.pos),
         convert(data.etym),
+        convert(data.forms),
         FormatSense(data.primary_definition),
-        utils::join_as(data.senses, FormatSense),
-        convert(data.forms)
+        utils::join(data.senses, "", ",{}", FormatSense)
     );
 }
 
