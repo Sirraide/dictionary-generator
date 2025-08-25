@@ -76,13 +76,20 @@ void TypstBackend::emit(std::string_view word, const FullEntry& data) {
         return sense;
     };
 
+    auto ipa = ops.to_ipa(word);
+    if (not ipa.has_value()) {
+        error("Failed to convert '{}' to IPA: {}", word, ipa.error());
+        ipa = "ERROR";
+    }
+
     current_word = word;
     output += std::format(
-        "#dictionary-entry((word: [{}], pos: [{}], etym: [{}], forms: [{}], prim_def: {}, senses: ({})))\n",
+        "#dictionary-entry((word: [{}], pos: [{}], etym: [{}], forms: [{}], ipa: [{}], prim_def: {}, senses: ({})))\n",
         word,
         convert(data.pos),
         convert(data.etym),
         convert(data.forms),
+        ipa.value(),
         FormatSense(data.primary_definition),
         utils::join(data.senses, "", "{},", FormatSense)
     );

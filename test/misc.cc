@@ -5,11 +5,13 @@
 
 using namespace dict;
 
+namespace {
 struct TestOps : LanguageOps {
     [[nodiscard]] auto to_ipa(std::string_view) -> Result<std::string> override { return "[[ipa]]"; }
 };
+}
 
-auto Emit(std::string_view input) -> EmitResult {
+static auto Emit(std::string_view input) -> EmitResult {
     TestOps ops;
     JsonBackend backend{ops, false};
     Generator gen{backend};
@@ -17,19 +19,19 @@ auto Emit(std::string_view input) -> EmitResult {
     return gen.emit_to_string();
 }
 
-void CheckContains(std::string_view input, const std::string& substr) {
+static void CheckContains(std::string_view input, const std::string& substr) {
     auto [output, has_error] = Emit(input);
     CHECK(not has_error);
     CHECK_THAT(std::string(stream(output).trim().text()), Catch::Matchers::ContainsSubstring(substr));
 }
 
-void CheckExact(std::string_view input, std::string_view expected) {
+static void CheckExact(std::string_view input, std::string_view expected) {
     auto [output, has_error] = Emit(input);
     CHECK(not has_error);
     CHECK(std::string(stream(output).trim().text()) == expected);
 }
 
-void CheckError(std::string_view input, const std::string& substr) {
+static void CheckError(std::string_view input, const std::string& substr) {
     auto [output, has_error] = Emit(input);
     CHECK(has_error);
     CHECK(std::string(stream(output).trim().text()) == substr);

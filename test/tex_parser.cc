@@ -4,10 +4,12 @@
 
 using namespace dict;
 
+namespace {
 struct TestOps : LanguageOps {
     auto handle_unknown_macro(TexParser&, std::string_view macro) -> Result<Node::Ptr> override;
     [[nodiscard]] auto to_ipa(std::string_view) -> Result<std::string> override { return "[[ipa]]"; }
 };
+}
 
 auto TestOps::handle_unknown_macro(TexParser& p, std::string_view macro) -> Result<Node::Ptr> {
     if (macro == "/") return p.text("Found /!");
@@ -24,7 +26,7 @@ auto TestOps::handle_unknown_macro(TexParser& p, std::string_view macro) -> Resu
     return LanguageOps::handle_unknown_macro(p, macro);
 }
 
-auto Convert(std::string_view input, bool strip_macros = false) -> std::string {
+static auto Convert(std::string_view input, bool strip_macros = false) -> std::string {
     TestOps ops;
     JsonBackend j{ops, false};
     j.current_word = "<f-w>the-current-word</f-w>";

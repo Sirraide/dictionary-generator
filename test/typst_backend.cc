@@ -5,12 +5,13 @@
 
 using namespace dict;
 
+namespace {
 struct TestOps : LanguageOps {
-    auto handle_unknown_macro(TexParser&, std::string_view macro) -> Result<Node::Ptr> override;
-    [[nodiscard]] auto to_ipa(std::string_view) -> Result<std::string> override { return "[[ipa]]"; }
+    [[nodiscard]] auto to_ipa(std::string_view) -> Result<std::string> override { return "/ipa/"; }
 };
+}
 
-void Check(std::string_view input, std::string_view output_raw) {
+static void Check(std::string_view input, std::string_view output_raw) {
     TestOps ops;
     TypstBackend typ{ops};
     Generator gen{typ};
@@ -27,7 +28,6 @@ void Check(std::string_view input, std::string_view output_raw) {
     CHECK(res.backend_output == output);
 }
 
-
 TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
     Check(
         "aub’heír|v. (in)tr.|obéir|To obey (+\\s{part} sbd.)",
@@ -36,6 +36,7 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
             "pos: [v. (in)tr.], "
             "etym: [obéir], "
             "forms: [], "
+            "ipa: [/ipa/],"
             "prim_def: (def: [To obey (\\+#smallcaps[part] sbd.).], comment: [], examples: ()),"
             "senses: ()"
         "))"
@@ -48,6 +49,7 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
             "pos:[v.tr.],"
             "etym:[animer],"
             "forms:[],"
+            "ipa: [/ipa/],"
             "prim_def:("
                 "def:[\\+#smallcaps[acc]Tobringtolife,animate.],"
                 "comment:[],"
@@ -64,6 +66,7 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
             "pos:[B],"
             "etym:[C],"
             "forms:[],"
+            "ipa: [/ipa/],"
             "prim_def:("
                 "def:[D.],"
                 "comment:[],"
@@ -91,6 +94,7 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
             "pos:[b],"
             "etym:[c],"
             "forms:[],"
+            "ipa: [/ipa/],"
             "prim_def:("
                 "def:[],"
                 "comment:[],"
