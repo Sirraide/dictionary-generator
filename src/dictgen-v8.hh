@@ -18,11 +18,20 @@ using v8::Persistent;
 using v8::String;
 using v8::Value;
 
+namespace detail {
+void ThrowImpl(std::string s);
+}
+
 auto CompileAndRun(std::string_view code, std::string_view script_name) -> Result<Local<Value>>;
 auto Isolate() -> v8::Isolate*;
 auto Main(int argc, char **argv) -> Result<int>;
 auto Str(std::string_view sv) -> Local<String>;
 auto ToString(Local<Value> s) -> std::string;
+
+template <typename ...Args>
+void Throw(std::format_string<Args...> fmt, Args&&... args) {
+    detail::ThrowImpl(std::format(fmt, std::forward<Args>(args)...));
+}
 }
 
 template <std::derived_from<v8::Value> T>

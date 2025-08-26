@@ -1,1 +1,1 @@
-a|b|c|\s{d} e
+a|b|c|\safaef{d} e

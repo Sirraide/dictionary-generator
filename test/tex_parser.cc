@@ -6,12 +6,12 @@ using namespace dict;
 
 namespace {
 struct TestOps : LanguageOps {
-    auto handle_unknown_macro(TexParser&, std::string_view macro) -> Result<Node::Ptr> override;
+    auto handle_unknown_macro(TexParser&, std::string_view macro) -> Result<Node*> override;
     [[nodiscard]] auto to_ipa(std::string_view) -> Result<std::string> override { return "[[ipa]]"; }
 };
 }
 
-auto TestOps::handle_unknown_macro(TexParser& p, std::string_view macro) -> Result<Node::Ptr> {
+auto TestOps::handle_unknown_macro(TexParser& p, std::string_view macro) -> Result<Node*> {
     if (macro == "/") return p.text("Found /!");
     if (macro == "definedintestops") return p.text("This is our test macro");
     if (macro == "xyz") {

@@ -29,8 +29,18 @@ auto gen::Str(std::string_view sv) -> Local<String> {
     return s.ToLocalChecked();
 }
 
+void gen::detail::ThrowImpl(std::string s) {
+    Isolate()->ThrowError(Str(s));
+}
+
 auto gen::ToString(Local<Value> s) -> std::string {
-    if (s.IsEmpty()) return "<empty handle>";
+    if (s.IsEmpty()) return "<#empty>";
+    if (
+        s->IsObject() and
+        s.As<v8::Object>()->InternalFieldCount() == 0 and
+        not v8::JSON::Stringify(Isolate()->GetCurrentContext(), s).ToLocal(&s)
+    ) return "<#error>";
+
     String::Utf8Value v{Isolate(), s};
     return std::string(*v, usz(v.length()));
 }

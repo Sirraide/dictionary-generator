@@ -1,5 +1,10 @@
 function HandleUnknownMacro(parser, macro) {
-    throw Error("TODO");
+    const arg = parser.parse_arg()
+    return parser.group(
+        parser.raw('<foo>'),
+        arg,
+        parser.raw('</foo>'),
+    )
 }
 
 function ToIPA(s) {
@@ -7,5 +12,5 @@ function ToIPA(s) {
 }
 
 function PreprocessFullEntry() {
-    // Does nothing.
+    // Nothing.
 }

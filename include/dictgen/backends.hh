@@ -13,11 +13,14 @@ class JsonBackend;
 
 class Backend {
 protected:
-    Backend(LanguageOps& ops) : ops{ops} {}
+    Backend(LanguageOps& ops);
 
 public:
     /// Language-specific operations.
     LanguageOps& ops;
+
+    /// Nodes owned by this backend.
+    std::vector<std::unique_ptr<Node>> nodes;
 
     /// Output buffer.
     std::string output;

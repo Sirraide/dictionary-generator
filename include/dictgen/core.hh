@@ -64,10 +64,6 @@ struct FullEntry {
 
 struct [[nodiscard]] Node {
     LIBBASE_IMMOVABLE(Node);
-    struct Ptr : std::unique_ptr<Node> {
-        Ptr() = delete("Should never construct a 'null' node");
-        explicit Ptr(std::unique_ptr<Node> base) : unique_ptr(std::move(base)) {}
-    };
 
     virtual ~Node() = default;
 
@@ -112,18 +108,18 @@ enum class Macro {
 
 struct MacroNode final : Node {
     const Macro macro;
-    FixedVector<Ptr, 1> args;
+    FixedVector<Node*, 1> args;
 
-    explicit MacroNode(Macro macro, FixedVector<Ptr, 1> args = {})
+    explicit MacroNode(Macro macro, FixedVector<Node*, 1> args = {})
         : macro(macro),
           args(std::move(args)) {}
 
-    explicit MacroNode(Macro macro, Ptr arg) : macro(macro), args{std::move(arg)} {}
+    explicit MacroNode(Macro macro, Node* arg) : macro(macro), args{std::move(arg)} {}
 };
 
 struct ContentNode final : Node {
-    std::vector<Ptr> children;
-    explicit ContentNode(std::vector<Ptr> children) : children(std::move(children)) {}
+    std::vector<Node*> children;
+    explicit ContentNode(std::vector<Node*> children) : children(std::move(children)) {}
 };
 
 struct EmptyNode final : Node {};
@@ -135,7 +131,7 @@ public:
     virtual ~Renderer() = default;
 
     void render(const Node& n);
-    void render(std::span<const Node::Ptr> nodes);
+    void render(std::span<const Node* const> nodes);
     virtual void render_macro(const MacroNode& n) = 0;
     virtual void render_text(std::string_view text) = 0;
 };
@@ -147,7 +143,7 @@ struct LanguageOps {
     /// Handle an unknown macro.
     ///
     /// \param macro The macro name, *without* the leading backslash.
-    virtual auto handle_unknown_macro(TexParser&, std::string_view macro) -> Result<Node::Ptr> {
+    virtual auto handle_unknown_macro(TexParser&, std::string_view macro) -> Result<Node*> {
         return Error("Unsupported macro '{}'. Please add support for it to the dictionary generator.", macro);
     }
 
