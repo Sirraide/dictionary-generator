@@ -30,6 +30,7 @@ auto gen::Str(std::string_view sv) -> Local<String> {
 }
 
 auto gen::ToString(Local<Value> s) -> std::string {
+    if (s.IsEmpty()) return "<empty handle>";
     String::Utf8Value v{Isolate(), s};
     return std::string(*v, usz(v.length()));
 }

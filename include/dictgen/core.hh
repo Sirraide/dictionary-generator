@@ -3,6 +3,7 @@
 
 #include <base/Base.hh>
 #include <base/Text.hh>
+#include <base/FixedVector.hh>
 
 namespace dict {
 using namespace base;
