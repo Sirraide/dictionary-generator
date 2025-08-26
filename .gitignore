@@ -5,8 +5,8 @@
 
 ## Build files.
 /out/
-/dictionary-generator
-/dictionary-generator.exe
+/dict-gen-v8
+/dict-gen-v8.exe
 
 ## Valgrind.
 callgrind.out.*

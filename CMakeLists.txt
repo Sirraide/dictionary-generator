@@ -160,24 +160,33 @@ FetchContent_MakeAvailable(base json)
 ## ============================================================================
 ##  Executables and libraries.
 ## ============================================================================
-file(GLOB_RECURSE sources src/*.cc)
-file(GLOB_RECURSE headers include/*.hh src/*.hh)
+file(GLOB_RECURSE lib_sources lib/*.cc)
+file(GLOB_RECURSE lib_headers include/*.hh lib/*.hh)
 
-## Add the executable.
-add_library(dictionary-generator STATIC ${sources})
-target_sources(dictionary-generator PUBLIC FILE_SET HEADERS FILES ${headers})
+add_library(dictionary-generator STATIC ${lib_sources})
+target_sources(dictionary-generator PUBLIC FILE_SET HEADERS FILES ${lib_headers})
 target_include_directories(dictionary-generator PUBLIC include)
 
-## Apply our options.
 target_link_libraries(dictionary-generator
     PUBLIC libbase nlohmann_json::nlohmann_json
     PRIVATE _dictionary_generator_options
 )
 
+if (DICT_GEN_ENABLE_V8)
+    file(GLOB_RECURSE sources src/*.cc)
+    file(GLOB_RECURSE headers src/*.hh)
+    add_executable(dict-gen-v8 ${sources})
+    target_sources(dict-gen-v8 PRIVATE FILE_SET HEADERS FILES ${headers})
+    target_link_libraries(dict-gen-v8 PRIVATE
+        dictionary-generator _dictionary_generator_options v8
+    )
+    set_target_properties(dict-gen-v8 PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}")
+endif()
+
 ## ============================================================================
 ##  Testing
 ## ============================================================================
-if (DEFINED BUILD_DICT_GEN_TESTS)
+if (BUILD_DICT_GEN_TESTS)
     FetchContent_Declare(
       Catch2
       GIT_REPOSITORY https://github.com/catchorg/Catch2.git
