@@ -41,6 +41,7 @@ void JsonBackend::Renderer::render_macro(const MacroNode& n) {
         default: Unreachable("Unsupported macro '{}'", enchantum::to_string(n.macro));
         case Macro::Ellipsis: out += "&hellip;"; break;
         case Macro::ParagraphBreak: out += "</p><p>"; break;
+        case Macro::SoftHyphen: out += "&shy;"; break;
         case Macro::This:
             if (backend.current_word.empty()) backend.error("'\\this' is not allowed here");
             out += backend.current_word;
@@ -67,6 +68,7 @@ auto JsonBackend::Renderer::tag_name(Macro m) -> str {
         // Not a tag.
         case Macro::Ellipsis:
         case Macro::ParagraphBreak:
+        case Macro::SoftHyphen:
         case Macro::This:
             return "";
     }

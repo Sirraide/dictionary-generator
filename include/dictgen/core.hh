@@ -106,6 +106,7 @@ enum class Macro {
     SmallCaps,
     Subscript,
     Superscript,
+    SoftHyphen,
     This, ///< The current word.
 };
 

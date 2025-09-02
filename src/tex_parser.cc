@@ -74,7 +74,11 @@ auto TexParser::ParseMacro() -> Result<Node::Ptr> {
     if (text::IsPunct(*input.front()) or input.starts_with(' ')) {
         static constexpr str SpecialChars = "- &$%#{}";
         auto c = input.take();
-        if (SpecialChars.contains(c[0])) return Make<TextNode>(c);
+        if (SpecialChars.contains(c[0])) {
+            if (c[0] == '-') return Make<MacroNode>(Macro::SoftHyphen);
+            return Make<TextNode>(c);
+        }
+
         if (c[0] == '\\') return Error("'\\\\' is not supported in this field");
         return HandleUnknownMacro(c);
     }
