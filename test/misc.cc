@@ -67,7 +67,7 @@ TEST_CASE("JSON backend: search normalisation") {
     CHECK(J.NormaliseForSearch("abcd") == "abcd");
     CHECK(J.NormaliseForSearch("ábćd") == "abcd");
     CHECK(J.NormaliseForSearch("ạ́́bć̣́d") == "abcd");
-    CHECK(J.NormaliseForSearch("  a  bc’’' '‘‘..-d-") == "d bc a");
+    CHECK(J.NormaliseForSearch("  a  bc’’' '‘‘..-d-") == "a bc d");
     CHECK(J.NormaliseForSearch("łŁlL") == "llll");
     CHECK(J.NormaliseForSearch("®©™@ç") == "rctmc");
     CHECK(J.NormaliseForSearch("ḍriłv́ẹ́âǎ") == "drilveaa");
@@ -139,6 +139,26 @@ TEST_CASE("JSON Backend: Don't escape characters in headword or search") {
             "ipa": "/a&b/",
             "pos": "",
             "word": "a&amp;b"
+        }
+    ],
+    "refs": []
+}
+)json");
+}
+
+TEST_CASE("JSON Backend: Sort search terms for more consistent output") {
+    CheckExact("q|||mc d e g x y e mm ma mb mq", R"json(
+{
+    "entries": [
+        {
+            "def": {
+                "def": "mc d e g x y e mm ma mb mq."
+            },
+            "def-search": "d e g ma mb mc mm mq x y",
+            "hw-search": "q",
+            "ipa": "/q/",
+            "pos": "",
+            "word": "q"
         }
     ],
     "refs": []

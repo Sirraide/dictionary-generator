@@ -89,13 +89,10 @@ auto JsonBackend::NormaliseForSearch(str value) -> std::string {
     // Trim and fold whitespace.
     auto fold_ws = str(remove_weird).fold_ws();
 
-    // Unique all words.
-    return utils::join(
-        str(fold_ws).split(" ")                        //
-            | vws::transform([](auto s) { return s; }) //
-            | rgs::to<std::set>(),
-        " "
-    );
+    // Unique all words and sort them.
+    auto words = str(fold_ws).split(" ") | rgs::to<std::vector>();
+    utils::unique_sort(words);
+    return utils::join(words, " ");
 }
 
 void JsonBackend::emit(str word, const FullEntry& data) {
