@@ -17,9 +17,9 @@ auto TestOps::handle_unknown_macro(TexParser& p, str macro) -> Result<Node::Ptr>
     if (macro == "xyz") {
         auto arg = Try(p.parse_arg());
         return p.group(
-            p.text("<foo>", true),
+            p.formatting("<foo>"),
             std::move(arg),
-            p.text("</foo>", true)
+            p.formatting("</foo>")
         );
     }
 
@@ -130,4 +130,9 @@ TEST_CASE("Refs and labels are dropped") {
 
 TEST_CASE("Comment and sense macros are dropped") {
     CHECK(Convert("\\comment a \\ex b \\comment c") == "a b c");
+}
+
+TEST_CASE("Formatting in custom macros is stripped properly") {
+    CHECK(Convert("\\xyz{bar}") == "<foo>bar</foo>");
+    CHECK(Convert("\\xyz{bar}", true) == "bar");
 }

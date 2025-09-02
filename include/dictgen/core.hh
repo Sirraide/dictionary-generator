@@ -89,9 +89,14 @@ struct TextNode final : Node {
 
 struct ComputedTextNode final : Node {
     std::string text;
-    bool raw;
-    explicit ComputedTextNode(std::string text, bool raw = false)
-        : text(std::move(text)), raw{raw} {}
+    explicit ComputedTextNode(std::string text)
+        : text(std::move(text)) {}
+};
+
+struct FormattingNode final : Node {
+    std::string text;
+    explicit FormattingNode(std::string text)
+        : text(std::move(text)) {}
 };
 
 /// Builtin macros.
@@ -138,6 +143,7 @@ public:
     void render(std::span<const Node::Ptr> nodes);
     virtual void render_macro(const MacroNode& n) = 0;
     virtual void render_text(str text) = 0;
+    virtual void render_formatting(str formatting) { render_text(formatting); }
 };
 
 /// Language-specific operations.

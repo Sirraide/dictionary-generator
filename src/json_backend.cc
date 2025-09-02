@@ -25,6 +25,7 @@ struct JsonBackend::Renderer : dict::Renderer {
 
     void render_macro(const MacroNode& n) override;
     void render_text(str text) override;
+    void render_formatting(str formatting) override;
     auto tag_name(Macro m) -> str;
 };
 
@@ -52,6 +53,11 @@ void JsonBackend::Renderer::render_macro(const MacroNode& n) {
 void JsonBackend::Renderer::render_text(str text) {
     if (not raw_text and text.contains_any("<>§~-&")) out += backend.html_escaper.replace(text);
     else out += text;
+}
+
+void JsonBackend::Renderer::render_formatting(str formatting) {
+    if (raw_text) return;
+    out += formatting;
 }
 
 auto JsonBackend::Renderer::tag_name(Macro m) -> str {

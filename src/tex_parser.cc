@@ -8,11 +8,8 @@ void Renderer::render(const Node& n) {
     if (auto t = n.as<TextNode>()) return render_text(t->text);
     if (auto m = n.as<MacroNode>()) return render_macro(*m);
     if (auto c = n.as<ContentNode>()) return render(c->children);
-    if (auto t = n.as<ComputedTextNode>()) {
-        if (t->raw) out += t->text;
-        else render_text(t->text);
-        return;
-    }
+    if (auto t = n.as<ComputedTextNode>()) return render_text(t->text);
+    if (auto t = n.as<FormattingNode>()) return render_formatting(t->text);
     Unreachable("Invalid node type");
 }
 

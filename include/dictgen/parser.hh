@@ -32,11 +32,15 @@ public:
     /// Parse a group. This can be invoked by macro handlers to parse macro arguments.
     auto parse_arg() -> Result<Node::Ptr>;
 
-    /// Make a text node.
-    ///
-    /// If 'raw' is true, the text will not be escaped again.
-    auto text(std::string text, bool raw = false) -> Node::Ptr {
-        return Make<ComputedTextNode>(std::move(text), raw);
+    /// Make a formatting node; text passed to this will be inserted literally and
+    /// stripped out entirely in context were we don’t care about formatting.
+    auto formatting(std::string text) -> Node::Ptr {
+        return Make<FormattingNode>(std::move(text));
+    }
+
+    /// Make a text node; text passed to this will be escaped.
+    auto text(std::string text) -> Node::Ptr {
+        return Make<ComputedTextNode>(std::move(text));
     }
 
 private:
