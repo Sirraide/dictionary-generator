@@ -44,7 +44,7 @@ void JsonBackend::Renderer::render_macro(const MacroNode& n) {
         case Macro::SoftHyphen: out += "&shy;"; break;
         case Macro::This:
             if (backend.current_word.empty()) backend.error("'\\this' is not allowed here");
-            out += backend.current_word;
+            out += std::format("<f-w>{}</f-w>", backend.current_word);
             break;
     }
 }

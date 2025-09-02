@@ -29,7 +29,7 @@ auto TestOps::handle_unknown_macro(TexParser& p, str macro) -> Result<Node::Ptr>
 static auto Convert(str input, bool strip_macros = false) -> std::string {
     TestOps ops;
     JsonBackend j{ops, false};
-    j.current_word = "<f-w>the-current-word</f-w>";
+    j.current_word = "the-current-word";
     auto text = j.tex_to_html(input, strip_macros);
     if (j.has_error) throw std::runtime_error(j.errors);
     return text;

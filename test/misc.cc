@@ -165,3 +165,23 @@ TEST_CASE("JSON Backend: Sort search terms for more consistent output") {
 }
 )json");
 }
+
+TEST_CASE("JSON Backend: Format \\this as a word") {
+    CheckExact("abcd|||\\this", R"json(
+{
+    "entries": [
+        {
+            "def": {
+                "def": "<f-w>abcd</f-w>."
+            },
+            "def-search": "",
+            "hw-search": "abcd",
+            "ipa": "/abcd/",
+            "pos": "",
+            "word": "abcd"
+        }
+    ],
+    "refs": []
+}
+)json");
+}
