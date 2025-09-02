@@ -7,7 +7,9 @@ using namespace dict;
 
 namespace {
 struct TestOps : LanguageOps {
-    [[nodiscard]] auto to_ipa(str) -> Result<std::string> override { return "[[ipa]]"; }
+    [[nodiscard]] auto to_ipa(str s) -> Result<std::string> override {
+        return std::format("/{}/", s);
+    }
 };
 }
 
@@ -28,7 +30,7 @@ static void CheckContains(str input, const std::string& substr) {
 static void CheckExact(str input, str expected) {
     auto [output, has_error] = Emit(input);
     CHECK(not has_error);
-    CHECK(std::string(str(output).trim()) == expected);
+    CHECK(std::string(str(output).trim()) == std::string(expected.trim()));
 }
 
 static void CheckError(str input, const std::string& substr) {
@@ -122,4 +124,24 @@ TEST_CASE("Bogus entries") {
         "a > \\\\",
         "In Line 1: '\\\\' cannot be used in a reference entry"
     );
+}
+
+TEST_CASE("JSON Backend: Don't escape characters in headword or search") {
+    CheckExact("a&b|||c&d", R"json(
+{
+    "entries": [
+        {
+            "def": {
+                "def": "c&amp;d."
+            },
+            "def-search": "cd",
+            "hw-search": "ab",
+            "ipa": "/a&b/",
+            "pos": "",
+            "word": "a&amp;b"
+        }
+    ],
+    "refs": []
+}
+)json");
 }

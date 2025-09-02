@@ -72,7 +72,7 @@ TEST_CASE("Escaping braces works") {
 }
 
 TEST_CASE("Single-character macros") {
-    CHECK(Convert("\\-") == "&shy;");
+    CHECK(Convert("\\-") == "-");
     CHECK(Convert("\\ ") == " ");
     CHECK(Convert("\\&") == "&amp;");
     CHECK(Convert("\\$") == "$");
@@ -81,7 +81,7 @@ TEST_CASE("Single-character macros") {
     CHECK(Convert("\\{") == "{");
     CHECK(Convert("\\}") == "}");
 
-    CHECK(Convert("{\\-}") == "&shy;");
+    CHECK(Convert("{\\-}") == "-");
     CHECK(Convert("{\\ }") == " ");
     CHECK(Convert("{\\&}") == "&amp;");
     CHECK(Convert("{\\$}") == "$");

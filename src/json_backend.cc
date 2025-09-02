@@ -14,15 +14,14 @@ JsonBackend::JsonBackend(LanguageOps& ops, bool minify)
     html_escaper.add(">", "&gt;");
     html_escaper.add("§~", "grammar"); // FIXME: Make section references work somehow.
     html_escaper.add("~", "&nbsp;");
-    html_escaper.add("-", "&shy;");
     html_escaper.add("&", "&amp;");
 }
 
 struct JsonBackend::Renderer : dict::Renderer {
     JsonBackend& backend;
-    const bool strip_formatting;
+    const bool raw_text;
     Renderer(JsonBackend& backend, bool strip_formatting)
-        : backend{backend}, strip_formatting{strip_formatting} {}
+        : backend{backend}, raw_text{strip_formatting} {}
 
     void render_macro(const MacroNode& n) override;
     void render_text(str text) override;
@@ -30,7 +29,7 @@ struct JsonBackend::Renderer : dict::Renderer {
 };
 
 void JsonBackend::Renderer::render_macro(const MacroNode& n) {
-    if (strip_formatting) return;
+    if (raw_text) return;
     if (auto s = tag_name(n.macro); not s.empty()) {
         out += std::format("<{}>", s);
         render(n.args);
@@ -50,7 +49,7 @@ void JsonBackend::Renderer::render_macro(const MacroNode& n) {
 }
 
 void JsonBackend::Renderer::render_text(str text) {
-    if (text.contains_any("<>§~-&")) out += backend.html_escaper.replace(text);
+    if (not raw_text and text.contains_any("<>§~-&")) out += backend.html_escaper.replace(text);
     else out += text;
 }
 
@@ -108,7 +107,7 @@ void JsonBackend::emit(str word, const FullEntry& data) {
         if (not data.ipa.empty()) return data.ipa;
 
         // Otherwise, call the conversion function.
-        auto ipa = ops.to_ipa(current_word);
+        auto ipa = ops.to_ipa(word);
         if (ipa.has_value()) return std::move(ipa.value());
         error("Could not convert '{}' to IPA: {}", word, ipa.error());
         return "";
