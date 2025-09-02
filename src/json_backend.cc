@@ -39,7 +39,7 @@ void JsonBackend::Renderer::render_macro(const MacroNode& n) {
     }
 
     switch (n.macro) {
-        default: Unreachable("Unsupported macro '{}'", enchantum::to_string(n.macro));
+        default: Unreachable("Unsupported macro '{}'", +n.macro);
         case Macro::Ellipsis: out += "&hellip;"; break;
         case Macro::ParagraphBreak: out += "</p><p>"; break;
         case Macro::SoftHyphen: out += "&shy;"; break;
