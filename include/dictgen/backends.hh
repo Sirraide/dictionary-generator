@@ -54,10 +54,10 @@ public:
     virtual ~Backend() = default;
 
     /// Emit a reference.
-    virtual void emit(std::string_view word, const RefEntry& data) = 0;
+    virtual void emit(str word, const RefEntry& data) = 0;
 
     /// Emit a full entry.
-    virtual void emit(std::string_view word, const FullEntry& data) = 0;
+    virtual void emit(str word, const FullEntry& data) = 0;
     virtual void emit_error(std::string error) = 0;
     virtual void finish() {}
 };
@@ -76,17 +76,17 @@ class JsonBackend final : public Backend {
 public:
     explicit JsonBackend(LanguageOps& ops, bool minify);
 
-    void emit(std::string_view word, const FullEntry& data) override;
-    void emit(std::string_view word, const RefEntry& data) override;
+    void emit(str word, const FullEntry& data) override;
+    void emit(str word, const RefEntry& data) override;
     void emit_error(std::string error) override;
     void finish() override;
 
 private:
-    auto NormaliseForSearch(std::string_view value) -> std::string;
-    auto tex_to_html(stream input, bool strip_macros = false) -> std::string;
+    auto NormaliseForSearch(str value) -> std::string;
+    auto tex_to_html(str input, bool strip_macros = false) -> std::string;
     auto entries() -> json& { return out["entries"]; }
     auto refs() -> json& { return out["refs"]; }
-    auto tag_name(Macro m) -> std::string_view;
+    auto tag_name(Macro m) -> str;
 };
 
 class TypstBackend final : public Backend {
@@ -97,20 +97,20 @@ class TypstBackend final : public Backend {
 public:
     explicit TypstBackend(LanguageOps& ops) : Backend(ops) {}
 
-    void emit(std::string_view word, const FullEntry& data) override;
-    void emit(std::string_view word, const RefEntry& data) override;
+    void emit(str word, const FullEntry& data) override;
+    void emit(str word, const RefEntry& data) override;
     void emit_error(std::string error) override;
 
 private:
-    auto convert(stream input) -> std::string;
+    auto convert(str input) -> std::string;
 };
 
 class TeXBackend final : public Backend {
 public:
     explicit TeXBackend(LanguageOps& ops, std::string fname);
 
-    void emit(std::string_view word, const FullEntry& data) override;
-    void emit(std::string_view word, const RefEntry& data) override;
+    void emit(str word, const FullEntry& data) override;
+    void emit(str word, const RefEntry& data) override;
 
     // Emit errors as LaTeX macros.
     //

@@ -5,13 +5,13 @@
 using namespace dict;
 
 namespace {
-constexpr std::u32string_view SenseMacroU32 = U"\\\\";
-constexpr std::u32string_view Apostrophe = U"'`’\N{MODIFIER LETTER APOSTROPHE}";
+constexpr str32 SenseMacroU32 = U"\\\\";
+constexpr str32 Apostrophe = U"'`’\N{MODIFIER LETTER APOSTROPHE}";
 
-auto FullStopDelimited(u32stream text) -> std::string {
+auto FullStopDelimited(str32 text) -> std::string {
     text.trim();
     if (text.empty()) return "";
-    auto str = text::ToUTF8(text.text());
+    auto str = text::ToUTF8(text);
 
     // Skip past quotes so we don’t turn e.g. ⟨...’⟩ into ⟨...’.⟩.
     while (text.ends_with_any(Apostrophe)) text.drop_back();
@@ -83,15 +83,15 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     //          \comment comment for example 1
     //     \ex example 2
     //          \comment comment for example 2
-    auto SplitSense = [&](u32stream sense) {
-        static constexpr std::u32string_view Ex = U"\\ex";
-        static constexpr std::u32string_view Comment = U"\\comment";
+    auto SplitSense = [&](str32 sense) {
+        static constexpr str32 Ex = U"\\ex";
+        static constexpr str32 Comment = U"\\comment";
         static auto CommentOrEx = u32regex::create(U"\\\\(?:ex|comment)").value();
 
         // Find the sense comment or first example, if any, and depending on which comes first.
         FullEntry::Sense s;
         auto def_text = sense.trim_front().take_until(CommentOrEx);
-        bool def_is_empty = u32stream(def_text).trim().empty();
+        bool def_is_empty = def_text.trim().empty();
         s.def = FullStopDelimited(def_text);
 
         // Sense has a comment.
@@ -126,7 +126,7 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     // and doesn’t count as a sense because it is either the only one or, if there
     // are multiple senses, it denotes a more overarching definition that applies
     // to all or most senses.
-    u32stream s{parts[+DefPart]};
+    str32 s{parts[+DefPart]};
     entry.primary_definition = SplitSense(s.take_until_and_drop(SenseMacroU32));
     for (auto sense : s.split(SenseMacroU32))
         entry.senses.push_back(SplitSense(sense));
@@ -144,8 +144,8 @@ void Generator::create_full_entry(std::u32string word, std::vector<std::u32strin
     entries.emplace_back(std::move(word), backend.line, std::move(nfkd), std::move(entry));
 }
 
-bool Generator::disallow_specials(u32stream text, std::string_view message) {
-    auto Disallow = [&](std::u32string_view what) {
+bool Generator::disallow_specials(str32 text, str message) {
+    auto Disallow = [&](str32 what) {
         if (text.contains(what)) {
             backend.error("'{}' cannot be used {}", what, message);
             return false;
@@ -180,8 +180,8 @@ int Generator::emit() {
     return 0;
 }
 
-void Generator::parse(std::string_view input_text) {
-    static constexpr std::u32string_view ws = U" \t\v\f\n\r";
+void Generator::parse(str input_text) {
+    static constexpr str32 ws = U" \t\v\f\n\r";
 
     // Convert text to u32.
     std::u32string text = text::ToUTF32(input_text);
@@ -191,21 +191,8 @@ void Generator::parse(std::string_view input_text) {
     auto ShipOutLine = [&] {
         if (logical_line.empty()) return;
         defer { logical_line.clear(); };
-
-        // Collapse whitespace into single spaces.
-        for (usz pos = 0;;) {
-            pos = logical_line.find_first_of(ws, pos);
-            if (pos == std::u32string::npos) break;
-            if (auto end = logical_line.find_first_not_of(ws, pos); end != std::u32string::npos) {
-                logical_line.replace(pos, end - pos, U" ");
-                pos = end;
-            } else {
-                logical_line.erase(pos);
-                break;
-            }
-        }
-
-        u32stream line{logical_line};
+        logical_line = str32(logical_line).fold_ws();
+        str32 line{logical_line};
         line.trim();
 
         // If the line contains no '|' characters and a `>`,
@@ -221,10 +208,10 @@ void Generator::parse(std::string_view input_text) {
             if (not disallow_specials(line, "in a reference entry"))
                 return;
 
-            auto from = u32stream(line.take_until(U'>')).trim();
-            auto target = line.drop().trim().text();
+            auto from = line.take_until(U'>').trim();
+            auto target = line.drop().trim();
             for (auto entry : from.split(U",")) {
-                auto word = entry.trim().text();
+                auto word = entry.trim();
                 entries.emplace_back(
                     std::u32string{word},
                     backend.line,
@@ -243,9 +230,9 @@ void Generator::parse(std::string_view input_text) {
             for (auto part : line.split(U"|")) {
                 if (first) {
                     first = false;
-                    word = std::u32string{part.trim().text()};
+                    word = std::u32string{part.trim()};
                 } else {
-                    line_parts.emplace_back(part.trim().text());
+                    line_parts.emplace_back(part.trim());
                 }
             }
             create_full_entry(std::move(word), std::move(line_parts));
@@ -254,7 +241,7 @@ void Generator::parse(std::string_view input_text) {
 
     // Process the text.
     bool skipping = false;
-    for (auto [i, line] : utils::enumerate(u32stream(text).lines())) {
+    for (auto [i, line] : utils::enumerate(str32(text).lines())) {
         line = line.take_until(U'#');
         backend.line = i + 1;
 
@@ -269,11 +256,11 @@ void Generator::parse(std::string_view input_text) {
                 if (line.consume(U"all")) skipping = false;
                 else if (line.consume(U"json")) skipping = not dynamic_cast<JsonBackend*>(&backend);
                 else if (line.consume(U"tex")) skipping = not dynamic_cast<TeXBackend*>(&backend);
-                else backend.error("Unknown backend: {}", line.text());
+                else backend.error("Unknown backend: {}", line);
                 continue;
             }
 
-            backend.error("Unknown directive: {}", line.text());
+            backend.error("Unknown directive: {}", line);
             continue;
         }
 
@@ -283,14 +270,14 @@ void Generator::parse(std::string_view input_text) {
         // Perform line continuation.
         if (line.starts_with_any(U" \t")) {
             logical_line += ' ';
-            logical_line += line.trim().text();
+            logical_line += line.trim();
             continue;
         }
 
         // This line starts a new entry, so ship out the last
         // one and start a new one.
         ShipOutLine();
-        logical_line = line.text();
+        logical_line = line.string();
     }
 
     // Ship out the last line.

@@ -25,7 +25,7 @@ auto TexParser::parse_arg() -> Result<Node::Ptr> {
     return ParseGroup();
 }
 
-auto TexParser::HandleUnknownMacro(std::string_view macro) -> Result<Node::Ptr> {
+auto TexParser::HandleUnknownMacro(str macro) -> Result<Node::Ptr> {
     return backend.ops.handle_unknown_macro(*this, macro);
 }
 
@@ -72,7 +72,7 @@ auto TexParser::ParseMacro() -> Result<Node::Ptr> {
 
     // Found a macro; first, handle single-character macros.
     if (text::IsPunct(*input.front()) or input.starts_with(' ')) {
-        static constexpr std::string_view SpecialChars = "- &$%#{}";
+        static constexpr str SpecialChars = "- &$%#{}";
         auto c = input.take();
         if (SpecialChars.contains(c[0])) return Make<TextNode>(c);
         if (c[0] == '\\') return Error("'\\\\' is not supported in this field");
@@ -117,7 +117,7 @@ auto TexParser::ParseMaths() -> Result<Node::Ptr> {
     return node;
 }
 
-auto TexParser::Parse(Backend& backend, stream input) -> Result<Node::Ptr> {
+auto TexParser::Parse(Backend& backend, str input) -> Result<Node::Ptr> {
     TexParser parser{backend, input};
     std::vector<Node::Ptr> children;
     while (not parser.input.empty()) Try(parser.ParseContent(children, 0));

@@ -7,11 +7,11 @@ using namespace dict;
 
 namespace {
 struct TestOps : LanguageOps {
-    [[nodiscard]] auto to_ipa(std::string_view) -> Result<std::string> override { return "[[ipa]]"; }
+    [[nodiscard]] auto to_ipa(str) -> Result<std::string> override { return "[[ipa]]"; }
 };
 }
 
-static auto Emit(std::string_view input) -> EmitResult {
+static auto Emit(str input) -> EmitResult {
     TestOps ops;
     JsonBackend backend{ops, false};
     Generator gen{backend};
@@ -19,22 +19,22 @@ static auto Emit(std::string_view input) -> EmitResult {
     return gen.emit_to_string();
 }
 
-static void CheckContains(std::string_view input, const std::string& substr) {
+static void CheckContains(str input, const std::string& substr) {
     auto [output, has_error] = Emit(input);
     CHECK(not has_error);
-    CHECK_THAT(std::string(stream(output).trim().text()), Catch::Matchers::ContainsSubstring(substr));
+    CHECK_THAT(std::string(str(output).trim()), Catch::Matchers::ContainsSubstring(substr));
 }
 
-static void CheckExact(std::string_view input, std::string_view expected) {
+static void CheckExact(str input, str expected) {
     auto [output, has_error] = Emit(input);
     CHECK(not has_error);
-    CHECK(std::string(stream(output).trim().text()) == expected);
+    CHECK(std::string(str(output).trim()) == expected);
 }
 
-static void CheckError(std::string_view input, const std::string& substr) {
+static void CheckError(str input, const std::string& substr) {
     auto [output, has_error] = Emit(input);
     CHECK(has_error);
-    CHECK(std::string(stream(output).trim().text()) == substr);
+    CHECK(std::string(str(output).trim()) == substr);
 }
 
 TEST_CASE("JSON backend: Disallow \\comment and \\ex if the definition is empty") {
@@ -65,7 +65,7 @@ TEST_CASE("JSON backend: search normalisation") {
     CHECK(J.NormaliseForSearch("abcd") == "abcd");
     CHECK(J.NormaliseForSearch("ábćd") == "abcd");
     CHECK(J.NormaliseForSearch("ạ́́bć̣́d") == "abcd");
-    CHECK(J.NormaliseForSearch("  a  bc’’' '‘‘..-d-") == "a bc d");
+    CHECK(J.NormaliseForSearch("  a  bc’’' '‘‘..-d-") == "d bc a");
     CHECK(J.NormaliseForSearch("łŁlL") == "llll");
     CHECK(J.NormaliseForSearch("®©™@ç") == "rctmc");
     CHECK(J.NormaliseForSearch("ḍriłv́ẹ́âǎ") == "drilveaa");

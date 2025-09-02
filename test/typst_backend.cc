@@ -7,19 +7,19 @@ using namespace dict;
 
 namespace {
 struct TestOps : LanguageOps {
-    [[nodiscard]] auto to_ipa(std::string_view) -> Result<std::string> override { return "/ipa/"; }
+    [[nodiscard]] auto to_ipa(str) -> Result<std::string> override { return "/ipa/"; }
 };
 }
 
-static void Check(std::string_view input, std::string_view output_raw) {
+static void Check(str input, str output_raw) {
     TestOps ops;
     TypstBackend typ{ops};
     Generator gen{typ};
-    input = stream(input).trim().text();
-    auto output = stream(output_raw).remove_all(" \n\r\t\v\f");
+    input.trim();
+    auto output = output_raw.remove_all(" \n\r\t\v\f");
     gen.parse(input);
     auto res = gen.emit_to_string();
-    res.backend_output = stream(res.backend_output).remove_all(" \n\r\t\v\f");
+    res.backend_output = str(res.backend_output).remove_all(" \n\r\t\v\f");
     if (res.has_error) throw std::runtime_error(res.backend_output);
     if (res.backend_output != output) {
         std::println("A: ⟨{}⟩", res.backend_output);

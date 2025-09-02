@@ -12,7 +12,7 @@ TeXBackend::TeXBackend(LanguageOps& ops, std::string filename) : Backend{ops} {
     print("\n");
 }
 
-void TeXBackend::emit(std::string_view word, const FullEntry& data) { // clang-format off
+void TeXBackend::emit(str word, const FullEntry& data) { // clang-format off
     auto FormatSense = [](const FullEntry::Sense& s) {
         return s.def
             + (
@@ -47,7 +47,7 @@ void TeXBackend::emit(std::string_view word, const FullEntry& data) { // clang-f
     ); // clang-format on
 }
 
-void TeXBackend::emit(std::string_view word, const RefEntry& data) {
+void TeXBackend::emit(str word, const RefEntry& data) {
     print("\\refentry{{{}}}{{{}}}\n", word, data);
 }
 

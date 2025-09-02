@@ -42,11 +42,11 @@ public:
     explicit Generator(Backend& backend) : backend(backend) {}
     [[nodiscard]] int emit();
     [[nodiscard]] auto emit_to_string() -> EmitResult;
-    void parse(std::string_view input_text);
+    void parse(str input_text);
 
 private:
     void create_full_entry(std::u32string word, std::vector<std::u32string> parts);
-    bool disallow_specials(u32stream text, std::string_view message);
+    bool disallow_specials(str32 text, str message);
     [[nodiscard]] auto ops() -> LanguageOps& { return backend.ops; }
 };
 } // namespace dict

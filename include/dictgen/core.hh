@@ -83,8 +83,8 @@ protected:
 };
 
 struct TextNode final : Node {
-    std::string_view text;
-    explicit TextNode(std::string_view text) : text(text) {}
+    str text;
+    explicit TextNode(str text) : text(text) {}
 };
 
 struct ComputedTextNode final : Node {
@@ -136,7 +136,7 @@ public:
     void render(const Node& n);
     void render(std::span<const Node::Ptr> nodes);
     virtual void render_macro(const MacroNode& n) = 0;
-    virtual void render_text(std::string_view text) = 0;
+    virtual void render_text(str text) = 0;
 };
 
 /// Language-specific operations.
@@ -146,7 +146,7 @@ struct LanguageOps {
     /// Handle an unknown macro.
     ///
     /// \param macro The macro name, *without* the leading backslash.
-    virtual auto handle_unknown_macro(TexParser&, std::string_view macro) -> Result<Node::Ptr> {
+    virtual auto handle_unknown_macro(TexParser&, str macro) -> Result<Node::Ptr> {
         return Error("Unsupported macro '{}'. Please add support for it to the dictionary generator.", macro);
     }
 
@@ -157,7 +157,7 @@ struct LanguageOps {
     ///
     /// This can return an empty string if we don’t care about including
     /// a phonetic representation of the word.
-    [[nodiscard]] virtual auto to_ipa(std::string_view) -> Result<std::string> = 0;
+    [[nodiscard]] virtual auto to_ipa(str) -> Result<std::string> = 0;
 };
 }
 

@@ -6,7 +6,7 @@ struct TypstBackend::Renderer : dict::Renderer {
     TypstBackend& backend;
     Renderer(TypstBackend& backend) : backend(backend) {}
     void render_macro(const MacroNode& n) override;
-    void render_text(std::string_view text) override;
+    void render_text(str text) override;
 };
 
 void TypstBackend::Renderer::render_macro(const MacroNode& n) {
@@ -33,11 +33,11 @@ void TypstBackend::Renderer::render_macro(const MacroNode& n) {
     out += "]";
 }
 
-void TypstBackend::Renderer::render_text(std::string_view text) {
-    out += stream(text).escape("*_`<@=-+/\\~#$");
+void TypstBackend::Renderer::render_text(str text) {
+    out += text.escape("*_`<@=-+/\\~#$");
 }
 
-auto TypstBackend::convert(stream input) -> std::string {
+auto TypstBackend::convert(str input) -> std::string {
     auto res = TexParser::Parse(*this, input);
     if (not res.has_value()) {
         error("{}", res.error());
@@ -49,11 +49,11 @@ auto TypstBackend::convert(stream input) -> std::string {
     return std::move(r.out);
 }
 
-void TypstBackend::emit(std::string_view word, const RefEntry& data) {
+void TypstBackend::emit(str word, const RefEntry& data) {
     output += std::format("#dictionary-reference([{}], [{}])\n", word, data);
 }
 
-void TypstBackend::emit(std::string_view word, const FullEntry& data) {
+void TypstBackend::emit(str word, const FullEntry& data) {
     auto FormatSense = [&](const FullEntry::Sense& s) -> std::string {
         if (s.comment.empty() and s.examples.empty() and s.def.empty())
             return "(def: [], comment: [], examples: ())";

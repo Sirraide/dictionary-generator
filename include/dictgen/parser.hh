@@ -12,15 +12,15 @@ class TexParser {
     Backend& backend;
 
 public:
-    stream input;
+    str input;
 
 private:
-    explicit TexParser(Backend& backend, stream input)
+    explicit TexParser(Backend& backend, str input)
         : backend(backend), input(input) {}
 
 public:
     /// Run the converter.
-    static auto Parse(Backend& backend, stream input) -> Result<Node::Ptr>;
+    static auto Parse(Backend& backend, str input) -> Result<Node::Ptr>;
 
     /// Make a group node.
     auto group(auto ...nodes) -> Node::Ptr {
@@ -46,7 +46,7 @@ private:
         return Node::Ptr(std::make_unique<NodeType>(std::forward<Args>(args)...));
     }
 
-    auto HandleUnknownMacro(std::string_view macro) -> Result<Node::Ptr>;
+    auto HandleUnknownMacro(str macro) -> Result<Node::Ptr>;
     auto ParseContent(std::vector<Node::Ptr>& nodes, i32 braces) -> Result<>;
     auto ParseGroup() -> Result<Node::Ptr>;
     auto ParseMacro() -> Result<Node::Ptr>;

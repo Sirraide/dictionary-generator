@@ -25,8 +25,8 @@ struct JsonBackend::Renderer : dict::Renderer {
         : backend{backend}, strip_formatting{strip_formatting} {}
 
     void render_macro(const MacroNode& n) override;
-    void render_text(std::string_view text) override;
-    auto tag_name(Macro m) -> std::string_view;
+    void render_text(str text) override;
+    auto tag_name(Macro m) -> str;
 };
 
 void JsonBackend::Renderer::render_macro(const MacroNode& n) {
@@ -49,12 +49,12 @@ void JsonBackend::Renderer::render_macro(const MacroNode& n) {
     }
 }
 
-void JsonBackend::Renderer::render_text(std::string_view text) {
-    if (stream{text}.contains_any("<>§~-&")) out += backend.html_escaper.replace(text);
+void JsonBackend::Renderer::render_text(str text) {
+    if (text.contains_any("<>§~-&")) out += backend.html_escaper.replace(text);
     else out += text;
 }
 
-auto JsonBackend::Renderer::tag_name(Macro m) -> std::string_view {
+auto JsonBackend::Renderer::tag_name(Macro m) -> str {
     switch (m) {
         case Macro::Bold: return "strong";
         case Macro::Italic: return "em";
@@ -78,28 +78,28 @@ auto JsonBackend::Renderer::tag_name(Macro m) -> std::string_view {
 // IMPORTANT: Remember to update the function with the same name in the
 // code for the ULTRAFRENCH dictionary page on nguh.org if the output of
 // this function changes.
-auto JsonBackend::NormaliseForSearch(std::string_view value) -> std::string {
+auto JsonBackend::NormaliseForSearch(str value) -> std::string {
     auto haystack = search_transliterator(value);
 
     // The steps below only apply to the haystack, not the needle, and should
     // NOT be applied on the frontend:
     //
     // Yeet all instances of 'sbdsth', which is what 'sbd./sth.' degenerates to.
-    auto remove_weird = stream(haystack).trim().replace("sbdsth", "");
+    auto remove_weird = str(haystack).trim().replace("sbdsth", "");
 
     // Trim and fold whitespace.
-    auto fold_ws = stream(remove_weird).fold_ws();
+    auto fold_ws = str(remove_weird).fold_ws();
 
     // Unique all words.
     return utils::join(
-        stream(fold_ws).split(" ")                            //
-            | vws::transform([](auto s) { return s.text(); }) //
+        str(fold_ws).split(" ")                        //
+            | vws::transform([](auto s) { return s; }) //
             | rgs::to<std::set>(),
         " "
     );
 }
 
-void JsonBackend::emit(std::string_view word, const FullEntry& data) {
+void JsonBackend::emit(str word, const FullEntry& data) {
     json& e = entries().emplace_back();
     e["word"] = current_word = tex_to_html(word);
     e["pos"] = tex_to_html(data.pos);
@@ -143,7 +143,7 @@ void JsonBackend::emit(std::string_view word, const FullEntry& data) {
     e["def-search"] = NormaliseForSearch(tex_to_html(data.primary_definition.def, true) + tex_to_html(all_senses, true));
 }
 
-void JsonBackend::emit(std::string_view word, const RefEntry& data) {
+void JsonBackend::emit(str word, const RefEntry& data) {
     json& e = refs().emplace_back();
     e["from"] = current_word = tex_to_html(word);
     e["from-search"] = NormaliseForSearch(tex_to_html(current_word, true));
@@ -160,7 +160,7 @@ void JsonBackend::finish() {
     else output = minify ? out.dump() : out.dump(4);
 }
 
-auto JsonBackend::tex_to_html(stream input, bool strip_macros) -> std::string {
+auto JsonBackend::tex_to_html(str input, bool strip_macros) -> std::string {
     auto res = TexParser::Parse(*this, input);
     if (not res.has_value()) {
         error("{}", res.error());
