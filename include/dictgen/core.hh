@@ -143,7 +143,7 @@ public:
     void render(std::span<const Node::Ptr> nodes);
     virtual void render_macro(const MacroNode& n) = 0;
     virtual void render_text(str text) = 0;
-    virtual void render_formatting(str formatting) { render_text(formatting); }
+    virtual void render_formatting(str formatting) { out += formatting; }
 };
 
 /// Language-specific operations.

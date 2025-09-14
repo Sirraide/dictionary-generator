@@ -8,6 +8,10 @@ using namespace dict;
 namespace {
 struct TestOps : LanguageOps {
     [[nodiscard]] auto to_ipa(str) -> Result<std::string> override { return "/ipa/"; }
+    auto handle_unknown_macro(TexParser& p, str macro) -> Result<Node::Ptr> override {
+        if (macro == "raw") return p.formatting("#raw-typst[$a$_b_*c*]");
+        return LanguageOps::handle_unknown_macro(p, macro);
+    }
 };
 }
 
@@ -113,3 +117,8 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
     Check("a > b", "#dictionary-reference([a],[b])");
 }
 
+TEST_CASE("Typst backend should not escape formatting") {
+    TestOps ops;
+    TypstBackend b{ops};
+    CHECK(b.convert("\\raw") == "#raw-typst[$a$_b_*c*]");
+}
