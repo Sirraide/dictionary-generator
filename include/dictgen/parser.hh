@@ -22,6 +22,12 @@ public:
     /// Run the converter.
     static auto Parse(Backend& backend, str input) -> Result<Node::Ptr>;
 
+    /// Check what target we’re compiling for.
+    template <std::derived_from<Backend> T>
+    bool backend_is() {
+        return dynamic_cast<T*>(&backend) != nullptr;
+    }
+
     /// Make a group node.
     auto group(auto ...nodes) -> Node::Ptr {
         std::vector<Node::Ptr> children;

@@ -136,3 +136,22 @@ TEST_CASE("Formatting in custom macros is stripped properly") {
     CHECK(Convert("\\xyz{bar}") == "<foo>bar</foo>");
     CHECK(Convert("\\xyz{bar}", true) == "bar");
 }
+
+TEST_CASE("Backend Query") {
+    TestOps ops;
+    JsonBackend json{ops, false};
+    TeXBackend tex{ops, "file"};
+    TypstBackend typ{ops};
+
+    CHECK(TexParser(json, "").backend_is<JsonBackend>());
+    CHECK(not TexParser(json, "").backend_is<TeXBackend>());
+    CHECK(not TexParser(json, "").backend_is<TypstBackend>());
+
+    CHECK(not TexParser(tex, "").backend_is<JsonBackend>());
+    CHECK(TexParser(tex, "").backend_is<TeXBackend>());
+    CHECK(not TexParser(tex, "").backend_is<TypstBackend>());
+
+    CHECK(not TexParser(typ, "").backend_is<JsonBackend>());
+    CHECK(not TexParser(typ, "").backend_is<TeXBackend>());
+    CHECK(TexParser(typ, "").backend_is<TypstBackend>());
+}
