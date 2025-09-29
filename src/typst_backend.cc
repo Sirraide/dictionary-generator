@@ -23,7 +23,7 @@ void TypstBackend::Renderer::render_macro(const MacroNode& n) {
         case Macro::SmallCaps: out += "#smallcaps["; break;
         case Macro::Subscript: out += "#sub["; break;
         case Macro::Superscript: out += "#super["; break;
-        case Macro::SoftHyphen: out += "-?"; break;
+        case Macro::SoftHyphen: out += "-?"; return;
         case Macro::This:
             if (backend.current_word.empty()) backend.error("'\\this' is not allowed here");
             out += backend.current_word;

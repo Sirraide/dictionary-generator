@@ -122,3 +122,9 @@ TEST_CASE("Typst backend should not escape formatting") {
     TypstBackend b{ops};
     CHECK(b.convert("\\raw") == "#raw-typst[$a$_b_*c*]");
 }
+
+TEST_CASE("Typst: \\- works properly") {
+    TestOps ops;
+    TypstBackend b{ops};
+    CHECK(b.convert("a\\-b") == "a-?b");
+}
