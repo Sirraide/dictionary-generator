@@ -108,6 +108,7 @@ void TypstBackend::emit(str word, const FullEntry& data) {
 
 void TypstBackend::emit_error(std::string error) {
     errors += error;
+    if (not errors.ends_with('\n')) errors += "\n";
 }
 
 void TypstBackend::finish() {
