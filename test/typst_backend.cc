@@ -7,7 +7,7 @@ using namespace dict;
 
 namespace {
 struct TestOps : LanguageOps {
-    [[nodiscard]] auto to_ipa(str) -> Result<std::string> override { return "/ipa/"; }
+    [[nodiscard]] auto to_ipa(str input) -> Result<std::string> override { return std::format("//{}//", input); }
     auto handle_unknown_macro(TexParser& p, str macro) -> Result<Node::Ptr> override {
         if (macro == "raw") return p.formatting("#raw-typst[$a$_b_*c*]");
         if (macro == "L") return p.formatting("#super[L]");
@@ -41,7 +41,7 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
             "pos: [v. (in)tr.], "
             "etym: [obéir], "
             "forms: [], "
-            "ipa: [/ipa/],"
+            "ipa: [//aub’heír//],"
             "prim_def: (def: [To obey (\\+#smallcaps[part] sbd.).], comment: [], examples: ()),"
             "senses: ()"
         "))"
@@ -54,7 +54,7 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
             "pos:[v.tr.],"
             "etym:[animer],"
             "forms:[],"
-            "ipa: [/ipa/],"
+            "ipa: [//ánvé//],"
             "prim_def:("
                 "def:[\\+#smallcaps[acc]Tobringtolife,animate.],"
                 "comment:[],"
@@ -71,7 +71,7 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
             "pos:[B],"
             "etym:[C],"
             "forms:[],"
-            "ipa: [/ipa/],"
+            "ipa: [//A//],"
             "prim_def:("
                 "def:[D.],"
                 "comment:[],"
@@ -99,7 +99,7 @@ TEST_CASE("Typst backend: some ULTRAFRENCH entries") {
             "pos:[b],"
             "etym:[c],"
             "forms:[],"
-            "ipa: [/ipa/],"
+            "ipa: [//a//],"
             "prim_def:("
                 "def:[],"
                 "comment:[],"
@@ -138,7 +138,7 @@ TEST_CASE("Typst: formatting in word") {
             "pos: [v. (in)tr.], "
             "etym: [obéir], "
             "forms: [], "
-            "ipa: [/ipa/],"
+            "ipa: [//aub’heír//],"
             "prim_def: (def: [To obey (\\+#smallcaps[part] sbd.).], comment: [], examples: ()),"
             "senses: ()"
         "))"

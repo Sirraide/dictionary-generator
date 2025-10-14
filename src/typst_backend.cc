@@ -87,7 +87,7 @@ void TypstBackend::emit(str word, const FullEntry& data) {
         return sense;
     };
 
-    auto ipa = ops.to_ipa(convert(word, false));
+    auto ipa = ops.to_ipa(convert(word, true));
     if (not ipa.has_value()) {
         error("Failed to convert '{}' to IPA: {}", word, ipa.error());
         ipa = "ERROR";
