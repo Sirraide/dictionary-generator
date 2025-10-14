@@ -150,6 +150,11 @@ public:
 struct LanguageOps {
     virtual ~LanguageOps() = default;
 
+    /// Sort headwords. Should return 'true' if 'a' is to be sorted before 'b'.
+    virtual bool collate(str32 a, str32 b, str32 a_nfkd, str32 b_nfkd) {
+        return a_nfkd == b_nfkd ? a < b : a_nfkd < b_nfkd;
+    }
+
     /// Handle an unknown macro.
     ///
     /// \param macro The macro name, *without* the leading backslash.

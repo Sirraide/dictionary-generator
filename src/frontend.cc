@@ -159,8 +159,8 @@ bool Generator::disallow_specials(str32 text, str message) {
 
 auto Generator::emit_to_string() -> EmitResult {
     // Sort the entries.
-    rgs::stable_sort(entries, [](const auto& a, const auto& b) {
-        return a.nfkd == b.nfkd ? a.word < b.word : a.nfkd < b.nfkd;
+    rgs::stable_sort(entries, [&](const auto& a, const auto& b) {
+        return ops().collate(a.word, b.word, a.nfkd, b.nfkd);
     });
 
     // Emit each entry.
