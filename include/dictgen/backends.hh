@@ -93,6 +93,7 @@ class TypstBackend final : public Backend {
     friend TexParser;
     struct Renderer;
     std::string current_word;
+    std::string errors;
 
 public:
     explicit TypstBackend(LanguageOps& ops) : Backend(ops) {}
@@ -100,9 +101,10 @@ public:
     void emit(str word, const FullEntry& data) override;
     void emit(str word, const RefEntry& data) override;
     void emit_error(std::string error) override;
+    void finish() override;
 
 private:
-    auto convert(str input) -> std::string;
+    auto convert(str input, bool strip_macros = false) -> std::string;
 };
 
 class TeXBackend final : public Backend {

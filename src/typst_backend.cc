@@ -4,12 +4,17 @@ using namespace dict;
 
 struct TypstBackend::Renderer : dict::Renderer {
     TypstBackend& backend;
-    Renderer(TypstBackend& backend) : backend(backend) {}
+    const bool raw_text;
+    Renderer(TypstBackend& backend, bool strip_formatting)
+        : backend(backend), raw_text(strip_formatting) {}
+
     void render_macro(const MacroNode& n) override;
     void render_text(str text) override;
+    void render_formatting(str formatting) override;
 };
 
 void TypstBackend::Renderer::render_macro(const MacroNode& n) {
+    if (raw_text) return;
     // Use #text rather than ** or __ because it nests properly (#text can reset
     // another #text but not ** o __).
     switch (n.macro) {
@@ -38,14 +43,19 @@ void TypstBackend::Renderer::render_text(str text) {
     out += text.escape("*_`<@=-+/\\~#$");
 }
 
-auto TypstBackend::convert(str input) -> std::string {
+void TypstBackend::Renderer::render_formatting(str formatting) {
+    if (raw_text) return;
+    dict::Renderer::render_formatting(formatting);
+}
+
+auto TypstBackend::convert(str input, bool strip_macros) -> std::string {
     auto res = TexParser::Parse(*this, input);
     if (not res.has_value()) {
         error("{}", res.error());
         return "";
     }
 
-    Renderer r{*this};
+    Renderer r{*this, strip_macros};
     r.render(*res.value());
     return std::move(r.out);
 }
@@ -77,16 +87,16 @@ void TypstBackend::emit(str word, const FullEntry& data) {
         return sense;
     };
 
-    auto ipa = ops.to_ipa(word);
+    auto ipa = ops.to_ipa(convert(word, false));
     if (not ipa.has_value()) {
         error("Failed to convert '{}' to IPA: {}", word, ipa.error());
         ipa = "ERROR";
     }
 
-    current_word = word;
+    current_word = convert(word);
     output += std::format(
         "#dictionary-entry((word: [{}], pos: [{}], etym: [{}], forms: [{}], ipa: [{}], prim_def: {}, senses: ({})))\n",
-        word,
+        current_word,
         convert(data.pos),
         convert(data.etym),
         convert(data.forms),
@@ -97,5 +107,12 @@ void TypstBackend::emit(str word, const FullEntry& data) {
 }
 
 void TypstBackend::emit_error(std::string error) {
-    output += std::format("#panic(\"{}\")", utils::Escape(error));
+    errors += error;
+}
+
+void TypstBackend::finish() {
+    if (has_error) {
+        output = "#panic(\"Dictionary generator has errors\")";
+        output += std::move(errors);
+    }
 }

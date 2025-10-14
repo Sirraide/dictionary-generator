@@ -10,6 +10,7 @@ struct TestOps : LanguageOps {
     [[nodiscard]] auto to_ipa(str) -> Result<std::string> override { return "/ipa/"; }
     auto handle_unknown_macro(TexParser& p, str macro) -> Result<Node::Ptr> override {
         if (macro == "raw") return p.formatting("#raw-typst[$a$_b_*c*]");
+        if (macro == "L") return p.formatting("#super[L]");
         return LanguageOps::handle_unknown_macro(p, macro);
     }
 };
@@ -127,4 +128,19 @@ TEST_CASE("Typst: \\- works properly") {
     TestOps ops;
     TypstBackend b{ops};
     CHECK(b.convert("a\\-b") == "a-?b");
+}
+
+TEST_CASE("Typst: formatting in word") {
+    Check(
+        "aub’heír\\L|v. (in)tr.|obéir|To obey (+\\s{part} sbd.)",
+        "#dictionary-entry(("
+            "word: [aub’heír#super[L]], "
+            "pos: [v. (in)tr.], "
+            "etym: [obéir], "
+            "forms: [], "
+            "ipa: [/ipa/],"
+            "prim_def: (def: [To obey (\\+#smallcaps[part] sbd.).], comment: [], examples: ()),"
+            "senses: ()"
+        "))"
+    );
 }
