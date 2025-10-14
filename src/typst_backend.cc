@@ -112,7 +112,7 @@ void TypstBackend::emit_error(std::string error) {
 
 void TypstBackend::finish() {
     if (has_error) {
-        output = "#panic(\"Dictionary generator has errors\")";
+        output = "#panic(\"Dictionary generator has errors\")\n";
         output += std::move(errors);
     }
 }
