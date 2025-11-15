@@ -61,7 +61,11 @@ auto TypstBackend::convert(str input, bool strip_macros) -> std::string {
 }
 
 void TypstBackend::emit(str word, const RefEntry& data) {
-    output += std::format("#dictionary-reference([{}], [{}])\n", word, data);
+    output += std::format(
+        "#dictionary-reference([{}], [{}])\n",
+        convert(word),
+        convert(data)
+    );
 }
 
 void TypstBackend::emit(str word, const FullEntry& data) {
