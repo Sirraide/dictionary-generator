@@ -130,6 +130,12 @@ TEST_CASE("Typst: \\- works properly") {
     CHECK(b.convert("a\\-b") == "a-?b");
 }
 
+TEST_CASE("Typst: ~ is *not* escaped") {
+    TestOps ops;
+    TypstBackend b{ops};
+    CHECK(b.convert("~") == "~");
+}
+
 TEST_CASE("Typst: formatting in word") {
     Check(
         "aub’heír\\L|v. (in)tr.|obéir|To obey (+\\s{part} sbd.)",

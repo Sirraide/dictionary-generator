@@ -40,7 +40,7 @@ void TypstBackend::Renderer::render_macro(const MacroNode& n) {
 }
 
 void TypstBackend::Renderer::render_text(str text) {
-    out += text.escape("*_`<@=-+/\\~#$");
+    out += text.escape("*_`<@=-+/\\#$");
 }
 
 void TypstBackend::Renderer::render_formatting(str formatting) {
