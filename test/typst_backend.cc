@@ -154,6 +154,6 @@ TEST_CASE("Typst: formatting in word") {
 TEST_CASE("Typst: TeX conversion is also applied in reference entries") {
     Check(
         "ac’hes > \\w{a} + \\w{c’hes}",
-        "#dictionary-reference([ac’hes], [#lemma[a] \\+ #lemma[c’hes]])"
+        "#dictionary-reference([ac’hes], [#dictionary-lemma[a] \\+ #dictionary-lemma[c’hes]])"
     );
 }

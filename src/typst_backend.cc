@@ -21,10 +21,10 @@ void TypstBackend::Renderer::render_macro(const MacroNode& n) {
         case Macro::Bold: out += "#text(weight: \"bold\")["; break;
         case Macro::Ellipsis: out += "..."; return;
         case Macro::Italic: out += "#text(style: \"italic\")["; break;
-        case Macro::Lemma: out += "#lemma["; break;
+        case Macro::Lemma: out += "#dictionary-lemma["; break;
         case Macro::Normal: out += "#text(style: \"normal\", weight: \"regular\")["; break;
         case Macro::ParagraphBreak: out += "#parbreak()"; return;
-        case Macro::Sense: out += "#sense["; break;
+        case Macro::Sense: out += "#dictionary-sense["; break;
         case Macro::SmallCaps: out += "#smallcaps["; break;
         case Macro::Subscript: out += "#sub["; break;
         case Macro::Superscript: out += "#super["; break;
