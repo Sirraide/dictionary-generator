@@ -1,3 +1,1 @@
-# Dictionary Generator
-This is a library extracted from the ULTRAFRENCHER. See here for a
-project that uses this library: https://github.com/Agma-Schwa/ULTRAFRENCH
+# Rewritten in Rust so it can be used in a Typst plugin: https://github.com/Agma-Schwa/dictionary-generator
